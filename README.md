@@ -1,19 +1,28 @@
-# Callaway JROTC Gallery Manager v3
+# Callaway JROTC Gallery v4 — No Server
 
-This version eliminates the need to open or edit `script.js`.
+This version does NOT use localhost and does NOT require Python.
+
+## Open the gallery
+
+1. Extract the ZIP.
+2. Open the folder.
+3. Double-click `index.html`.
+
+That is all.
 
 ## Manage photos
-Open `admin.html` or click **Manage Photos** from the gallery.
 
-You can upload photos, add titles/captions, choose categories/layouts, reorder, edit, delete, import JSON, and export `gallery-data.json`.
+Click **Manage Photos** in the gallery, or double-click `admin.html`.
 
-## Local Windows viewing
-Double-click `START-GALLERY.bat` to avoid browser restrictions on local JSON files.
+You can upload photos, add titles/captions, choose categories/layouts, reorder, edit, and delete.
 
-## Publish changes to GitHub Pages
-1. Click **EXPORT GALLERY DATA** in the manager.
-2. Replace `gallery-data.json` in your GitHub repository with the exported file.
-3. GitHub Pages updates the gallery automatically after deployment.
+When finished:
+1. Click **EXPORT gallery-data.js**
+2. Replace the old `gallery-data.js` in your GitHub repository with the downloaded one.
 
-### Important
-A static GitHub Pages site cannot securely write directly into your repository without GitHub authentication or a backend. This version therefore uses a visual manager plus one-file export instead of asking you to edit JavaScript.
+You never need to open `app.js` or `admin.js`.
+
+## GitHub Pages
+
+Upload the entire folder contents to the root of your GitHub repository, then enable:
+Settings → Pages → Deploy from a branch → main → /root
