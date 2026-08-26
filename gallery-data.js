@@ -8,9 +8,9 @@ window.CALLAWAY_GALLERY = [
   },
   {
     "image": "images/gala.jpg",
-    "title": "Gala",
+    "title": "gala",
     "caption": "",
     "category": "events",
-    "layout": "tall"
+    "layout": "normal"
   }
 ];
