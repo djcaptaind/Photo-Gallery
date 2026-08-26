@@ -11,6 +11,6 @@ window.CALLAWAY_GALLERY = [
     "title": "Gala",
     "caption": "",
     "category": "events",
-    "layout": "normal"
+    "layout": "tall"
   }
 ];
