@@ -1,4 +1,4 @@
-# Callaway JROTC Gallery v7 — No Server
+# Callaway JROTC Gallery v8 — No Server
 
 This version does NOT use localhost and does NOT require Python.
 
@@ -28,11 +28,11 @@ Upload the entire folder contents to the root of your GitHub repository, then en
 Settings → Pages → Deploy from a branch → main → /root
 
 
-## v7 fix
+## v8 fix
 The photo manager now uses IndexedDB instead of localStorage and automatically resizes large camera photos before storing them. This fixes Add Photo failures caused by browser localStorage size limits.
 
 
-## v7 — One-click GitHub Upload Package
+## v8 — One-click GitHub Upload Package
 
 In `admin.html`, click **EXPORT UPLOAD PACKAGE**.
 
@@ -49,7 +49,7 @@ After extracting it:
 The image paths are created automatically, so you do not have to edit JavaScript.
 
 
-## v7 — Direct Publish to GitHub
+## v8 — Direct Publish to GitHub
 
 The Gallery Manager now has a **Publish to GitHub** panel.
 
@@ -81,3 +81,12 @@ The token is not saved in IndexedDB or localStorage.
 
 ### Backup
 **Export Backup Package** remains available if direct publishing is blocked by browser/network policy.
+
+
+## v8 fix
+
+- Reworded the green token message to **Token entered for this session only**
+- Added a visible GitHub connection result box
+- Added exact HTTP/token/permission error details
+- Publish failures now show the real reason
+- Added clearer guidance when a browser blocks GitHub API requests

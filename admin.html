@@ -17,7 +17,7 @@
       <span class="eyebrow">DIRECT PUBLISH</span>
       <h3>Publish To GitHub</h3>
     </div>
-    <div class="secure-note">TOKEN IS NOT SAVED</div>
+    <div class="secure-note">TOKEN ENTERED FOR THIS SESSION ONLY</div>
   </div>
 
   <div class="publish-grid">
@@ -40,8 +40,7 @@
   </div>
 
   <div class="publish-explain">
-    Use a fine-grained token limited to this repository with <b>Contents: Read and write</b>. 
-    The token stays only in this browser tab and is never written into the gallery files.
+    Paste a fine-grained token for <b>Photo-Gallery</b> with <b>Contents: Read and write</b>. The token is used only while this page is open and is never written into your gallery files.
   </div>
 
   <div class="publish-actions">
@@ -53,6 +52,7 @@
     <div class="progress-top"><span id="progressText">Preparing…</span><b id="progressPct">0%</b></div>
     <div class="progress-track"><div id="progressBar"></div></div>
   </div>
+  <div id="githubStatus" class="github-status" hidden></div>
 </div>
 
 <div class="help">Export a ZIP package containing <b>gallery-data.js</b> and an <b>images</b> folder. Upload both to GitHub.</div><div id="cards" class="cards"></div></section>

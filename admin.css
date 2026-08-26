@@ -22,3 +22,23 @@
 .progress-track{height:8px;border-radius:999px;overflow:hidden;background:#020b13;border:1px solid rgba(255,255,255,.07)}
 #progressBar{height:100%;width:0;background:linear-gradient(90deg,#ff6b00,#ff9840);transition:width .25s ease}
 @media(max-width:650px){.publish-grid{grid-template-columns:1fr}.publish-actions{flex-direction:column}}
+
+.github-status{
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:10px;
+  font-size:10px;
+  line-height:1.55;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.github-status.ok{
+  color:#b9ffd2;
+  background:rgba(77,224,132,.08);
+  border:1px solid rgba(77,224,132,.25);
+}
+.github-status.error{
+  color:#ffd4d8;
+  background:rgba(255,77,94,.08);
+  border:1px solid rgba(255,77,94,.28);
+}

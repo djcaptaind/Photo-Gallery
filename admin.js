@@ -323,6 +323,22 @@ IMPORTANT: Do not upload this ZIP file itself to GitHub.
 
 
 
+
+function setGitHubStatus(message,type="ok"){
+  const box=document.getElementById("githubStatus");
+  if(!box)return;
+  box.hidden=false;
+  box.className="github-status "+type;
+  box.textContent=message;
+}
+function clearGitHubStatus(){
+  const box=document.getElementById("githubStatus");
+  if(!box)return;
+  box.hidden=true;
+  box.textContent="";
+  box.className="github-status";
+}
+
 // ============================================================
 // DIRECT GITHUB PUBLISH
 // Uses GitHub Contents API from the browser.
@@ -361,12 +377,20 @@ function ghSlug(text){
     .slice(0,55)||"photo";
 }
 async function ghJson(url,options={}){
-  const res=await fetch(url,options);
+  let res;
+  try{
+    res=await fetch(url,options);
+  }catch(err){
+    throw new Error("Browser could not reach GitHub API. If you opened admin.html from a local file, try the live GitHub Pages admin page. Original error: "+err.message);
+  }
   let body=null;
   try{body=await res.json()}catch(_){}
   if(!res.ok){
-    const msg=(body&&body.message)?body.message:`GitHub returned ${res.status}`;
-    throw new Error(msg);
+    let detail=(body&&body.message)?body.message:`GitHub returned HTTP ${res.status}`;
+    if(res.status===401) detail+=". The token is invalid, expired, or was copied incorrectly.";
+    if(res.status===403) detail+=". The token does not have permission to write to this repository.";
+    if(res.status===404) detail+=". Check that the token is allowed to access Photo-Gallery.";
+    throw new Error(detail);
   }
   return body;
 }
@@ -395,37 +419,60 @@ async function putGitHubFile(owner,repo,path,branch,token,contentBase64,message)
 }
 
 document.getElementById("testGitHubBtn").onclick=async()=>{
+  clearGitHubStatus();
   const owner=ghValue("ghOwner"),repo=ghValue("ghRepo"),branch=ghValue("ghBranch"),token=ghValue("ghToken");
-  if(!owner||!repo||!branch||!token){toast("Complete all GitHub fields","error");return}
+  if(!owner||!repo||!branch||!token){
+    setGitHubStatus("Enter the GitHub owner, repository, branch, and token before testing.","error");
+    toast("Complete all GitHub fields","error");
+    return;
+  }
   const btn=document.getElementById("testGitHubBtn");
   const old=btn.textContent;btn.disabled=true;btn.textContent="TESTING...";
   try{
     const info=await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,{headers:githubHeaders(token)});
     await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`,{headers:githubHeaders(token)});
+    setGitHubStatus(`CONNECTED
+Repository: ${info.full_name}
+Branch: ${branch}
+Your token is valid for reading this repository.`, "ok");
     toast(`Connected to ${info.full_name}`);
   }catch(err){
-    console.error(err);toast("GitHub connection failed: "+err.message,"error");
-  }finally{btn.disabled=false;btn.textContent=old}
+    console.error(err);
+    setGitHubStatus("CONNECTION FAILED
+"+err.message,"error");
+    toast("GitHub connection failed","error");
+  }finally{
+    btn.disabled=false;btn.textContent=old;
+  }
 };
 
 document.getElementById("publishGitHubBtn").onclick=async()=>{
+  clearGitHubStatus();
   const owner=ghValue("ghOwner"),repo=ghValue("ghRepo"),branch=ghValue("ghBranch"),token=ghValue("ghToken");
-  if(!owner||!repo||!branch||!token){toast("Complete all GitHub fields","error");return}
+  if(!owner||!repo||!branch||!token){
+    setGitHubStatus("Enter the GitHub owner, repository, branch, and token before publishing.","error");
+    toast("Complete all GitHub fields","error");
+    return;
+  }
+
   const btn=document.getElementById("publishGitHubBtn");
   const testBtn=document.getElementById("testGitHubBtn");
-  const old=btn.textContent;btn.disabled=true;testBtn.disabled=true;btn.textContent="PUBLISHING...";
+  const old=btn.textContent;
+  btn.disabled=true;testBtn.disabled=true;btn.textContent="PUBLISHING...";
+
   try{
     const ordered=await getAll();
     ordered.sort((a,b)=>(a.order??0)-(b.order??0));
-    if(!ordered.length)throw new Error("There are no photos to publish.");
+    if(!ordered.length) throw new Error("There are no photos to publish.");
 
-    // Confirm repo + branch before writing.
-    await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,{headers:githubHeaders(token)});
+    setPublishProgress(0,1,"Checking GitHub connection...");
+    const info=await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,{headers:githubHeaders(token)});
     await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`,{headers:githubHeaders(token)});
 
     const output=[];
     const used=new Set();
     const uploads=[];
+
     for(let i=0;i<ordered.length;i++){
       const p=ordered[i];
       let imagePath=p.image;
@@ -444,33 +491,42 @@ document.getElementById("publishGitHubBtn").onclick=async()=>{
 
     const total=uploads.length+1;
     let done=0;
-    setPublishProgress(done,total,"Preparing GitHub upload…");
+    setPublishProgress(done,total,"Preparing GitHub upload...");
 
     for(const file of uploads){
-      setPublishProgress(done,total,"Uploading "+file.path+"…");
+      setPublishProgress(done,total,"Uploading "+file.path+"...");
       await putGitHubFile(owner,repo,file.path,branch,token,file.base64,"Gallery photo: "+file.title);
       done++;
       setPublishProgress(done,total,"Uploaded "+file.path);
     }
 
     const galleryText="window.CALLAWAY_GALLERY = "+JSON.stringify(output,null,2)+";";
-    setPublishProgress(done,total,"Updating gallery-data.js…");
+    setPublishProgress(done,total,"Updating gallery-data.js...");
     await putGitHubFile(owner,repo,"gallery-data.js",branch,token,utf8ToBase64(galleryText),"Update Callaway JROTC photo gallery");
     done++;
     setPublishProgress(done,total,"Published successfully");
-    toast("Gallery published to GitHub");
 
-    // Update local records so already-published data URLs become repository paths.
     for(let i=0;i<ordered.length;i++){
-      const updated=output[i];
-      ordered[i].image=updated.image;
+      ordered[i].image=output[i].image;
       await putRecord(ordered[i]);
     }
     await refresh();
+
+    setGitHubStatus(
+      `PUBLISHED SUCCESSFULLY
+Repository: ${info.full_name}
+Branch: ${branch}
+Photos uploaded: ${uploads.length}
+gallery-data.js updated successfully.`,
+      "ok"
+    );
+    toast("Gallery published to GitHub");
   }catch(err){
     console.error(err);
     setPublishProgress(0,1,"Publish failed");
-    toast("Publish failed: "+err.message,"error");
+    setGitHubStatus("PUBLISH FAILED
+"+err.message,"error");
+    toast("Publish failed","error");
   }finally{
     btn.disabled=false;testBtn.disabled=false;btn.textContent=old;
   }
