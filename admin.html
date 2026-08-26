@@ -1,8 +1,8 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Callaway JROTC Gallery Manager</title><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="admin.css"></head>
 <body><header><div class="brand">4 <span>CALLAWAY JROTC<br><b>GALLERY MANAGER</b></span></div><a href="index.html">← VIEW GALLERY</a></header>
-<main><section class="intro"><span>NO SERVER • NO SCRIPT EDITING</span><h1>Manage Your<br><em>Photo Gallery.</em></h1><p>Add and organize photos here. When finished, click <b>Export gallery-data.js</b> and replace the old file in your GitHub repository.</p></section>
+<main><section class="intro"><span>NO SERVER • NO SCRIPT EDITING</span><h1>Manage Your<br><em>Photo Gallery.</em></h1><p>Add and organize photos here. Large JPGs are automatically resized for the gallery. When finished, click <b>Export gallery-data.js</b> and replace the old file in your GitHub repository.</p></section>
 <section class="workspace"><aside>
-<h2>Add Photo</h2><label>Upload Photo</label><input type="file" id="fileInput" accept="image/*"><div id="fileName" class="small">No photo selected</div>
+<h2>Add Photo</h2><label>Upload Photo</label><input type="file" id="fileInput" accept="image/*"><div id="fileName" class="small">No photo selected</div><img id="photoPreview" hidden style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:9px;border:1px solid rgba(255,255,255,.10)">
 <label>OR Image URL</label><input id="urlInput" placeholder="https://...">
 <label>Title</label><input id="titleInput" placeholder="Cadet Challenge">
 <label>Caption</label><textarea id="captionInput" rows="3"></textarea>

@@ -1,4 +1,4 @@
-# Callaway JROTC Gallery v4 — No Server
+# Callaway JROTC Gallery v5 — No Server
 
 This version does NOT use localhost and does NOT require Python.
 
@@ -26,3 +26,7 @@ You never need to open `app.js` or `admin.js`.
 
 Upload the entire folder contents to the root of your GitHub repository, then enable:
 Settings → Pages → Deploy from a branch → main → /root
+
+
+## v5 fix
+The photo manager now uses IndexedDB instead of localStorage and automatically resizes large camera photos before storing them. This fixes Add Photo failures caused by browser localStorage size limits.

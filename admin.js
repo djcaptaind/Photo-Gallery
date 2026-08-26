@@ -1,10 +1,269 @@
-let items=JSON.parse(localStorage.getItem("callawayGalleryV4")||"null")||JSON.parse(JSON.stringify(window.CALLAWAY_GALLERY||[]));let uploaded="";
+
+const DB_NAME="CallawayJROTCGalleryDB";
+const DB_VERSION=1;
+const STORE="photos";
 const labels={leadership:"Leadership",service:"Service",drill:"Drill & Color Guard",adventure:"Adventure",academics:"Academics",events:"Events"};
-const save=()=>localStorage.setItem("callawayGalleryV4",JSON.stringify(items));
-function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
-document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;document.getElementById("fileName").textContent=f.name;const r=new FileReader();r.onload=()=>{uploaded=r.result;toast("Photo ready")};r.readAsDataURL(f)};
-document.getElementById("addBtn").onclick=()=>{const image=uploaded||document.getElementById("urlInput").value.trim(),title=document.getElementById("titleInput").value.trim();if(!image)return toast("Choose a photo or URL");if(!title)return toast("Enter a title");items.push({image,title,caption:document.getElementById("captionInput").value.trim(),category:document.getElementById("categoryInput").value,layout:document.getElementById("layoutInput").value});save();render();toast("Photo added");uploaded="";document.getElementById("fileInput").value="";document.getElementById("fileName").textContent="No photo selected";document.getElementById("urlInput").value="";document.getElementById("titleInput").value="";document.getElementById("captionInput").value=""};
-function render(){const c=document.getElementById("cards");c.innerHTML="";document.getElementById("count").textContent=items.length;items.forEach((p,i)=>{const d=document.createElement("div");d.className="card";d.innerHTML=`<img src="${p.image}"><div class="body"><span>${labels[p.category]||p.category} • ${p.layout}</span><h3>${p.title}</h3><p>${p.caption||""}</p><div class="buttons"><button>↑</button><button>↓</button><button>EDIT</button><button>DELETE</button></div></div>`;const b=d.querySelectorAll("button");b[0].onclick=()=>{if(i>0){[items[i-1],items[i]]=[items[i],items[i-1]];save();render()}};b[1].onclick=()=>{if(i<items.length-1){[items[i+1],items[i]]=[items[i],items[i+1]];save();render()}};b[2].onclick=()=>{let t=prompt("Title:",p.title);if(t!==null)p.title=t||p.title;let cap=prompt("Caption:",p.caption||"");if(cap!==null)p.caption=cap;save();render()};b[3].onclick=()=>{if(confirm("Delete this photo?")){items.splice(i,1);save();render()}};c.appendChild(d)})}
-document.getElementById("resetBtn").onclick=()=>{if(confirm("Reset manager to the original sample gallery?")){items=JSON.parse(JSON.stringify(window.CALLAWAY_GALLERY||[]));save();render()}};
-document.getElementById("exportBtn").onclick=()=>{const text="window.CALLAWAY_GALLERY = "+JSON.stringify(items,null,2)+";";const blob=new Blob([text],{type:"text/javascript"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="gallery-data.js";a.click();URL.revokeObjectURL(url);toast("gallery-data.js exported")};
-render();
+let db;
+let items=[];
+let selectedDataUrl="";
+let selectedFileName="";
+
+function toast(msg,type="ok"){
+  const t=document.getElementById("toast");
+  t.textContent=msg;
+  t.style.borderColor=type==="error"?"#ff4d5e":"rgba(255,255,255,.12)";
+  t.style.color=type==="error"?"#ffd4d8":"#fff";
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=()=>{
+      const d=req.result;
+      if(!d.objectStoreNames.contains(STORE)){
+        d.createObjectStore(STORE,{keyPath:"id",autoIncrement:true});
+      }
+    };
+    req.onsuccess=()=>{db=req.result;resolve(db)};
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function getAll(){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,"readonly");
+    const req=tx.objectStore(STORE).getAll();
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function addRecord(record){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,"readwrite");
+    const req=tx.objectStore(STORE).add(record);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function putRecord(record){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,"readwrite");
+    const req=tx.objectStore(STORE).put(record);
+    req.onsuccess=()=>resolve();
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function deleteRecord(id){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,"readwrite");
+    const req=tx.objectStore(STORE).delete(id);
+    req.onsuccess=()=>resolve();
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function clearDB(){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,"readwrite");
+    const req=tx.objectStore(STORE).clear();
+    req.onsuccess=()=>resolve();
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function compressImage(file,maxW=1800,maxH=1400,quality=.86){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Could not read the photo."));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error("This image format could not be opened."));
+      img.onload=()=>{
+        let w=img.naturalWidth,h=img.naturalHeight;
+        const scale=Math.min(1,maxW/w,maxH/h);
+        w=Math.round(w*scale); h=Math.round(h*scale);
+        const canvas=document.createElement("canvas");
+        canvas.width=w; canvas.height=h;
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,w,h);
+        try{
+          const out=canvas.toDataURL("image/jpeg",quality);
+          resolve(out);
+        }catch(e){reject(e)}
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function seedIfEmpty(){
+  items=await getAll();
+  if(items.length) return;
+  const seed=Array.isArray(window.CALLAWAY_GALLERY)?window.CALLAWAY_GALLERY:[];
+  for(let i=0;i<seed.length;i++){
+    await addRecord({...seed[i],order:i});
+  }
+  items=await getAll();
+}
+
+async function refresh(){
+  items=await getAll();
+  items.sort((a,b)=>(a.order??0)-(b.order??0));
+  render();
+}
+
+function clearForm(){
+  selectedDataUrl="";
+  selectedFileName="";
+  document.getElementById("fileInput").value="";
+  document.getElementById("fileName").textContent="No photo selected";
+  document.getElementById("urlInput").value="";
+  document.getElementById("titleInput").value="";
+  document.getElementById("captionInput").value="";
+  const preview=document.getElementById("photoPreview");
+  if(preview){preview.src="";preview.hidden=true}
+}
+
+document.getElementById("fileInput").onchange=async e=>{
+  const f=e.target.files[0];
+  if(!f) return;
+  selectedFileName=f.name;
+  document.getElementById("fileName").textContent="Preparing "+f.name+"...";
+  try{
+    selectedDataUrl=await compressImage(f);
+    document.getElementById("fileName").textContent=f.name+" • ready";
+    const preview=document.getElementById("photoPreview");
+    if(preview){preview.src=selectedDataUrl;preview.hidden=false}
+    toast("Photo ready to add");
+  }catch(err){
+    console.error(err);
+    selectedDataUrl="";
+    document.getElementById("fileName").textContent="Could not prepare photo";
+    toast("Could not read that photo","error");
+  }
+};
+
+document.getElementById("addBtn").onclick=async()=>{
+  const url=document.getElementById("urlInput").value.trim();
+  const image=selectedDataUrl||url;
+  const title=document.getElementById("titleInput").value.trim();
+
+  if(!image){toast("Choose a photo first","error");return}
+  if(!title){toast("Enter a title","error");return}
+
+  const button=document.getElementById("addBtn");
+  const old=button.textContent;
+  button.disabled=true;
+  button.textContent="ADDING...";
+
+  try{
+    const current=await getAll();
+    await addRecord({
+      image,
+      title,
+      caption:document.getElementById("captionInput").value.trim(),
+      category:document.getElementById("categoryInput").value,
+      layout:document.getElementById("layoutInput").value,
+      order:current.length
+    });
+    await refresh();
+    clearForm();
+    toast("Photo added to gallery");
+  }catch(err){
+    console.error(err);
+    toast("Photo could not be added: "+(err.message||"browser storage error"),"error");
+  }finally{
+    button.disabled=false;
+    button.textContent=old;
+  }
+};
+
+function render(){
+  const c=document.getElementById("cards");
+  c.innerHTML="";
+  document.getElementById("count").textContent=items.length;
+  if(!items.length){
+    c.innerHTML='<div style="grid-column:1/-1;padding:50px;text-align:center;color:#7890a4;border:1px dashed rgba(255,255,255,.12);border-radius:12px">No photos yet.</div>';
+    return;
+  }
+  items.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`<img src="${p.image}" alt=""><div class="body"><span>${labels[p.category]||p.category} • ${p.layout||"normal"}</span><h3>${escapeHtml(p.title)}</h3><p>${escapeHtml(p.caption||"")}</p><div class="buttons"><button data-a="up">↑</button><button data-a="down">↓</button><button data-a="edit">EDIT</button><button data-a="delete">DELETE</button></div></div>`;
+    d.querySelector('[data-a="up"]').onclick=()=>move(i,-1);
+    d.querySelector('[data-a="down"]').onclick=()=>move(i,1);
+    d.querySelector('[data-a="edit"]').onclick=()=>editItem(i);
+    d.querySelector('[data-a="delete"]').onclick=()=>removeItem(i);
+    c.appendChild(d);
+  });
+}
+
+function escapeHtml(s=""){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+}
+
+async function move(i,delta){
+  const j=i+delta;
+  if(j<0||j>=items.length)return;
+  const a=items[i],b=items[j];
+  const ao=a.order??i,bo=b.order??j;
+  a.order=bo;b.order=ao;
+  await putRecord(a);await putRecord(b);await refresh();
+}
+
+async function editItem(i){
+  const p=items[i];
+  const t=prompt("Title:",p.title); if(t===null)return;
+  const cap=prompt("Caption:",p.caption||""); if(cap===null)return;
+  p.title=t.trim()||p.title;p.caption=cap.trim();
+  await putRecord(p);await refresh();toast("Photo updated");
+}
+
+async function removeItem(i){
+  const p=items[i];
+  if(!confirm(`Delete "${p.title}"?`))return;
+  await deleteRecord(p.id);
+  await refresh();
+  // normalize order
+  for(let k=0;k<items.length;k++){items[k].order=k;await putRecord(items[k])}
+  await refresh();toast("Photo deleted");
+}
+
+document.getElementById("resetBtn").onclick=async()=>{
+  if(!confirm("Reset the manager to the original sample gallery?"))return;
+  await clearDB();
+  const seed=Array.isArray(window.CALLAWAY_GALLERY)?window.CALLAWAY_GALLERY:[];
+  for(let i=0;i<seed.length;i++)await addRecord({...seed[i],order:i});
+  await refresh();toast("Sample gallery restored");
+};
+
+document.getElementById("exportBtn").onclick=async()=>{
+  const ordered=await getAll();
+  ordered.sort((a,b)=>(a.order??0)-(b.order??0));
+  const cleaned=ordered.map(({id,order,...rest})=>rest);
+  const text="window.CALLAWAY_GALLERY = "+JSON.stringify(cleaned,null,2)+";";
+  const blob=new Blob([text],{type:"text/javascript"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="gallery-data.js";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast("gallery-data.js exported");
+};
+
+(async function init(){
+  try{
+    await openDB();
+    await seedIfEmpty();
+    await refresh();
+  }catch(err){
+    console.error(err);
+    toast("Browser storage could not initialize","error");
+  }
+})();
