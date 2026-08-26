@@ -3,65 +3,254 @@ const REPO="Photo-Gallery";
 const BRANCH="main";
 const DATA_URL=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/gallery-data.json`;
 const labels={leadership:"Leadership",service:"Service",drill:"Drill & Color Guard",adventure:"Adventure",academics:"Academics",events:"Events"};
-const SLIDE_MS=5000;
+const ROTATE_MS=5000;
+
 let photos=[];
 let visible=[];
 let heroIndex=0;
 let heroPlaying=true;
 let heroTimer=null;
-let current=0;
-let lightboxPlaying=true;
-let lightboxTimer=null;
+let spotIndex=0;
+let spotPlaying=true;
+let spotTimer=null;
+
 const $=id=>document.getElementById(id);
-function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function esc(s=""){
+  return String(s).replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
 async function loadPhotos(){
   try{
     const r=await fetch(DATA_URL+`?v=${Date.now()}`,{cache:"no-store"});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const data=await r.json();
     photos=Array.isArray(data)?data:[];
-  }catch(e){console.error("Gallery load failed",e);photos=[]}
+  }catch(e){
+    console.error("Gallery data load failed:",e);
+    photos=[];
+  }
+
   visible=[...photos];
   $("photoCount").textContent=String(photos.length).padStart(2,"0");
-  setupHero();
+
+  if(!photos.length){
+    $("home").hidden=true;
+    $("emptyHero").hidden=false;
+  }else{
+    $("home").hidden=false;
+    $("emptyHero").hidden=true;
+    heroIndex=0;
+    updateHero();
+    startHero();
+  }
+
   renderGallery();
 }
-function setupHero(){
-  const hero=$("home"),empty=$("emptyHero"),card=$("heroCard");
-  if(!photos.length){hero.hidden=true;empty.hidden=false;card.hidden=true;return}
-  hero.hidden=false;empty.hidden=true;card.hidden=false;
-  $("heroSlides").innerHTML=photos.map((p,i)=>`<div class="hero-slide${i===0?' active':''}" style="background-image:url('${String(p.image).replace(/'/g,"%27")}')"></div>`).join("");
-  heroIndex=0;updateHero();startHero();
+
+function animateProgress(el,ms){
+  clearInterval(el._progressTimer);
+  el.style.width="0%";
+  const start=performance.now();
+  el._progressTimer=setInterval(()=>{
+    const pct=Math.min(100,(performance.now()-start)/ms*100);
+    el.style.width=pct+"%";
+    if(pct>=100)clearInterval(el._progressTimer);
+  },40);
 }
+
 function updateHero(){
   if(!photos.length)return;
   const p=photos[heroIndex];
-  [...$("heroSlides").children].forEach((el,i)=>el.classList.toggle("active",i===heroIndex));
+
+  $("heroBlur").style.backgroundImage=`url("${p.image}")`;
+  $("heroImage").classList.remove("motion");
+  $("heroImage").src=p.image;
+  $("heroImage").alt=p.title||"Callaway JROTC photo";
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$("heroImage").classList.add("motion")));
+
   $("heroTitle").textContent=p.title||"Callaway JROTC";
-  $("heroCaption").textContent=p.caption||labels[p.category]||"Callaway JROTC";
-  $("heroCounter").textContent=String(heroIndex+1).padStart(2,"0");
+  $("heroCategory").textContent=labels[p.category]||p.category||"Featured";
+  $("heroCaption").textContent=p.caption||`${labels[p.category]||"Callaway JROTC"} highlight`;
+  $("heroCurrent").textContent=String(heroIndex+1).padStart(2,"0");
 }
-function animateBar(el,ms){clearInterval(el._timer);el.style.width="0%";const start=performance.now();el._timer=setInterval(()=>{const pct=Math.min(100,(performance.now()-start)/ms*100);el.style.width=pct+"%";if(pct>=100)clearInterval(el._timer)},40)}
-function startHero(){stopHero();if(!heroPlaying||photos.length<2)return;animateBar($("heroProgressBar"),SLIDE_MS);heroTimer=setTimeout(()=>{heroIndex=(heroIndex+1)%photos.length;updateHero();startHero()},SLIDE_MS)}
-function stopHero(){clearTimeout(heroTimer);clearInterval($("heroProgressBar")._timer)}
+
+function startHero(){
+  stopHero();
+  if(!heroPlaying||photos.length<2)return;
+  animateProgress($("heroProgress"),ROTATE_MS);
+  heroTimer=setTimeout(()=>{
+    heroIndex=(heroIndex+1)%photos.length;
+    updateHero();
+    startHero();
+  },ROTATE_MS);
+}
+function stopHero(){
+  clearTimeout(heroTimer);
+  clearInterval($("heroProgress")._progressTimer);
+}
+
+$("heroPrev").onclick=()=>{
+  if(!photos.length)return;
+  heroIndex=(heroIndex-1+photos.length)%photos.length;
+  updateHero();
+  if(heroPlaying)startHero();
+};
+$("heroNext").onclick=()=>{
+  if(!photos.length)return;
+  heroIndex=(heroIndex+1)%photos.length;
+  updateHero();
+  if(heroPlaying)startHero();
+};
+$("heroPlay").onclick=()=>{
+  heroPlaying=!heroPlaying;
+  $("heroPlay").textContent=heroPlaying?"PAUSE":"PLAY";
+  heroPlaying?startHero():stopHero();
+};
+$("spotlightBtn").onclick=()=>{
+  visible=[...photos];
+  openSpotlight(heroIndex);
+};
+
 function renderGallery(filter="all"){
   visible=filter==="all"?[...photos]:photos.filter(p=>p.category===filter);
-  const grid=$("galleryGrid");grid.innerHTML="";$("emptyGallery").hidden=photos.length!==0;
-  visible.forEach((p,i)=>{const c=document.createElement("article");c.className=`photo-card ${p.layout||"normal"}`;c.innerHTML=`<img src="${esc(p.image)}" alt="${esc(p.title||'Photo')}" loading="lazy"><div class="card-num">${String(i+1).padStart(2,"0")}</div><div class="card-copy"><span>${esc(labels[p.category]||p.category||"Gallery")}</span><h3>${esc(p.title||"Photo")}</h3><p>${esc(p.caption||"")}</p></div>`;c.onclick=()=>openLightbox(i);grid.appendChild(c)})
+  const grid=$("galleryGrid");
+  grid.innerHTML="";
+  $("emptyGallery").hidden=photos.length!==0;
+
+  visible.forEach((p,i)=>{
+    const c=document.createElement("article");
+    c.className=`photo-card ${p.layout||"normal"}`;
+    c.innerHTML=`
+      <img src="${esc(p.image)}" alt="${esc(p.title||"Photo")}" loading="lazy">
+      <div class="card-num">${String(i+1).padStart(2,"0")}</div>
+      <div class="card-copy">
+        <span>${esc(labels[p.category]||p.category||"Gallery")}</span>
+        <h3>${esc(p.title||"Photo")}</h3>
+        <p>${esc(p.caption||"")}</p>
+      </div>`;
+    c.onclick=()=>openSpotlight(i);
+    grid.appendChild(c);
+  });
 }
-function updateLightbox(){const p=visible[current];if(!p)return;$("lightboxImage").src=p.image;$("lbCategory").textContent=labels[p.category]||p.category||"Gallery";$("lbTitle").textContent=p.title||"Photo";$("lbCaption").textContent=p.caption||"";$("lbCounter").textContent=`${String(current+1).padStart(2,"0")} / ${String(visible.length).padStart(2,"0")}`;$("bigNumber").textContent=String(current+1).padStart(2,"0")}
-function openLightbox(i){if(!visible.length)return;current=i;updateLightbox();$("lightbox").classList.add("open");$("lightbox").setAttribute("aria-hidden","false");document.body.classList.add("locked");lightboxPlaying=true;$("autoplayState").textContent="ON";$("toggleAutoplay").textContent="PAUSE AUTOPLAY";startLightbox()}
-function closeLightbox(){stopLightbox();$("lightbox").classList.remove("open");document.body.classList.remove("locked")}
-function startLightbox(){stopLightbox();if(!lightboxPlaying||visible.length<2)return;animateBar($("lightboxProgressBar"),SLIDE_MS);lightboxTimer=setTimeout(()=>{current=(current+1)%visible.length;updateLightbox();startLightbox()},SLIDE_MS)}
-function stopLightbox(){clearTimeout(lightboxTimer);clearInterval($("lightboxProgressBar")._timer);$("lightboxProgressBar").style.width="0%"}
-$("heroPrev").onclick=()=>{if(!photos.length)return;heroIndex=(heroIndex-1+photos.length)%photos.length;updateHero();if(heroPlaying)startHero()};
-$("heroNext").onclick=()=>{if(!photos.length)return;heroIndex=(heroIndex+1)%photos.length;updateHero();if(heroPlaying)startHero()};
-$("heroPause").onclick=()=>{heroPlaying=!heroPlaying;$("heroPause").textContent=heroPlaying?"PAUSE":"PLAY";heroPlaying?startHero():stopHero()};
-$("openHeroBtn").onclick=()=>{visible=[...photos];openLightbox(heroIndex)};
-$("closeBtn").onclick=closeLightbox;
-$("prevBtn").onclick=()=>{current=(current-1+visible.length)%visible.length;updateLightbox();if(lightboxPlaying)startLightbox()};
-$("nextBtn").onclick=()=>{current=(current+1)%visible.length;updateLightbox();if(lightboxPlaying)startLightbox()};
-$("toggleAutoplay").onclick=()=>{lightboxPlaying=!lightboxPlaying;$("autoplayState").textContent=lightboxPlaying?"ON":"OFF";$("toggleAutoplay").textContent=lightboxPlaying?"PAUSE AUTOPLAY":"PLAY AUTOPLAY";lightboxPlaying?startLightbox():stopLightbox()};
-document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderGallery(b.dataset.filter)});
-document.addEventListener("keydown",e=>{if(!$("lightbox").classList.contains("open"))return;if(e.key==="Escape")closeLightbox();if(e.key==="ArrowRight")$("nextBtn").click();if(e.key==="ArrowLeft")$("prevBtn").click()});
+
+document.querySelectorAll(".filter").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".filter").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    renderGallery(btn.dataset.filter);
+  };
+});
+
+function renderFilmstrip(){
+  const rail=$("filmstrip");
+  rail.innerHTML="";
+  visible.forEach((p,i)=>{
+    const t=document.createElement("button");
+    t.className="film-thumb"+(i===spotIndex?" active":"");
+    t.innerHTML=`<img src="${esc(p.image)}" alt="${esc(p.title||"Photo")}">`;
+    t.onclick=()=>{
+      spotIndex=i;
+      updateSpotlight();
+      if(spotPlaying)startSpotlight();
+    };
+    rail.appendChild(t);
+  });
+  setTimeout(()=>{
+    const active=rail.querySelector(".film-thumb.active");
+    if(active)active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+  },40);
+}
+
+function openSpotlight(i){
+  if(!visible.length)return;
+  spotIndex=i;
+  spotPlaying=true;
+  $("autoplayState").textContent="ON";
+  $("toggleAutoplay").textContent="PAUSE";
+  updateSpotlight();
+  $("spotlight").classList.add("open");
+  $("spotlight").setAttribute("aria-hidden","false");
+  document.body.classList.add("locked");
+  startSpotlight();
+}
+
+function closeSpotlight(){
+  stopSpotlight();
+  $("spotlight").classList.remove("open");
+  $("spotlight").setAttribute("aria-hidden","true");
+  document.body.classList.remove("locked");
+}
+
+function updateSpotlight(){
+  const p=visible[spotIndex];
+  if(!p)return;
+
+  $("spotlightBg").style.backgroundImage=`url("${p.image}")`;
+
+  const img=$("spotImage");
+  img.classList.remove("show");
+  img.classList.add("enter");
+
+  const preload=new Image();
+  preload.onload=()=>{
+    img.src=p.image;
+    requestAnimationFrame(()=>{
+      img.classList.remove("enter");
+      img.classList.add("show");
+    });
+  };
+  preload.src=p.image;
+
+  $("spotCategory").textContent=labels[p.category]||p.category||"Gallery";
+  $("spotTitle").textContent=p.title||"Photo";
+  $("spotCaption").textContent=p.caption||"";
+  $("spotCurrent").textContent=String(spotIndex+1).padStart(2,"0");
+  $("spotTotal").textContent=String(visible.length).padStart(2,"0");
+  renderFilmstrip();
+}
+
+function startSpotlight(){
+  stopSpotlight();
+  if(!spotPlaying||visible.length<2)return;
+  animateProgress($("spotProgress"),ROTATE_MS);
+  spotTimer=setTimeout(()=>{
+    spotIndex=(spotIndex+1)%visible.length;
+    updateSpotlight();
+    startSpotlight();
+  },ROTATE_MS);
+}
+function stopSpotlight(){
+  clearTimeout(spotTimer);
+  clearInterval($("spotProgress")._progressTimer);
+  $("spotProgress").style.width="0%";
+}
+
+$("spotPrev").onclick=()=>{
+  spotIndex=(spotIndex-1+visible.length)%visible.length;
+  updateSpotlight();
+  if(spotPlaying)startSpotlight();
+};
+$("spotNext").onclick=()=>{
+  spotIndex=(spotIndex+1)%visible.length;
+  updateSpotlight();
+  if(spotPlaying)startSpotlight();
+};
+$("toggleAutoplay").onclick=()=>{
+  spotPlaying=!spotPlaying;
+  $("autoplayState").textContent=spotPlaying?"ON":"OFF";
+  $("toggleAutoplay").textContent=spotPlaying?"PAUSE":"PLAY";
+  spotPlaying?startSpotlight():stopSpotlight();
+};
+$("closeSpotlight").onclick=closeSpotlight;
+
+document.addEventListener("keydown",e=>{
+  if(!$("spotlight").classList.contains("open"))return;
+  if(e.key==="Escape")closeSpotlight();
+  if(e.key==="ArrowRight")$("spotNext").click();
+  if(e.key==="ArrowLeft")$("spotPrev").click();
+});
+
 loadPhotos();
