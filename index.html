@@ -4,57 +4,181 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Callaway JROTC Legacy Gallery</title>
+  <meta name="theme-color" content="#03111d">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;700;800&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="noise"></div>
-<header class="topbar">
-  <a class="brand" href="#home"><div class="brand-badge">4</div><div><span>CALLAWAY HIGH SCHOOL</span><strong>JROTC LEGACY GALLERY</strong></div></a>
-  <nav><a href="#gallery">Gallery</a><a href="#legacy">Legacy</a><a class="manage-link" href="admin.html">Manage Photos</a></nav>
-</header>
+  <div class="noise"></div>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <div class="ambient ambient-c"></div>
 
-<main>
-<section class="hero" id="home">
-  <div class="hero-bg"></div><div class="hero-overlay"></div><div class="hero-grid"></div>
-  <div class="hero-content">
-    <div class="kicker"><span></span>4TH BATTALION • CHARGERS</div>
-    <h1><span>OUR MOMENTS.</span><em>OUR LEGACY.</em></h1>
-    <p>A cinematic archive of Callaway JROTC leadership, service, competition, teamwork, achievement, and unforgettable moments.</p>
-    <div class="actions"><a href="#gallery" class="primary">ENTER GALLERY <span>→</span></a><button id="randomBtn" class="ghost">RANDOM MOMENT</button></div>
-    <div class="hero-stats"><div><b id="photoCount">00</b><small>PHOTOS</small></div><div><b>06</b><small>CATEGORIES</small></div><div><b>4TH</b><small>BATTALION</small></div></div>
-  </div>
-</section>
+  <header class="topbar">
+    <a class="brand" href="#home">
+      <div class="brand-badge">4</div>
+      <div class="brand-text">
+        <span>CALLAWAY HIGH SCHOOL</span>
+        <strong>JROTC LEGACY GALLERY</strong>
+      </div>
+    </a>
 
-<section class="gallery-section" id="gallery">
-  <div class="section-intro">
-    <div><span class="micro">THE ARCHIVE</span><h2>Every Photo<br><em>Tells The Story.</em></h2></div>
-    <div class="intro-right"><p>Choose a category or open any photo for a full-screen cinematic view.</p>
-      <div class="filters">
-        <button class="filter active" data-filter="all">ALL</button><button class="filter" data-filter="leadership">LEADERSHIP</button><button class="filter" data-filter="service">SERVICE</button><button class="filter" data-filter="drill">DRILL</button><button class="filter" data-filter="adventure">ADVENTURE</button><button class="filter" data-filter="academics">ACADEMICS</button><button class="filter" data-filter="events">EVENTS</button>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#featured">Featured</a>
+      <a href="#gallery">Gallery</a>
+      <a href="admin.html" class="manage-link">Manage Photos</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-media" id="heroMedia"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-grid"></div>
+
+      <div class="hero-content">
+        <div class="kicker"><span></span>4TH BATTALION • CHARGERS • LIVE PHOTO WALL</div>
+        <h1><span>OUR MOMENTS.</span><em>OUR LEGACY.</em></h1>
+        <p class="hero-copy">An immersive visual gallery celebrating the people, pride, competition, service, leadership, and unforgettable moments of Callaway JROTC.</p>
+
+        <div class="hero-actions">
+          <a href="#gallery" class="btn btn-primary">ENTER GALLERY <span>→</span></a>
+          <button id="heroPauseBtn" class="btn btn-glass">PAUSE HERO AUTOPLAY</button>
+        </div>
+
+        <div class="hero-status-row">
+          <div class="hero-stat-card">
+            <small>LIVE ARCHIVE</small>
+            <strong id="heroPhotoCount">00 PHOTOS</strong>
+          </div>
+          <div class="hero-statline">
+            <div><strong id="heroSlideNumber">01</strong><span>FEATURED</span></div>
+            <div><strong>5s</strong><span>AUTO SHIFT</span></div>
+            <div><strong>∞</strong><span>LOOP</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-feature-card glass-panel" id="heroFeatureCard">
+        <div class="feature-top">
+          <span class="micro-label">NOW SHOWING</span>
+          <div class="hero-progress-shell">
+            <div class="hero-progress" id="heroProgress"></div>
+          </div>
+        </div>
+        <h3 id="heroTitle">Loading…</h3>
+        <span class="hero-category" id="heroCategory">Featured</span>
+        <p id="heroCaption">Preparing gallery...</p>
+
+        <div class="feature-actions">
+          <button id="heroPrevBtn" class="circle-btn">‹</button>
+          <button id="heroOpenBtn" class="wide-btn">OPEN FULL SCREEN</button>
+          <button id="heroNextBtn" class="circle-btn">›</button>
+        </div>
+      </div>
+
+      <div class="hero-side-label">CALLAWAY JROTC • JACKSON, MISSISSIPPI</div>
+    </section>
+
+    <section class="section featured-band" id="featured">
+      <div class="section-head split">
+        <div>
+          <span class="micro-label">FEATURED ROTATION</span>
+          <h2>Automatic <em>Spotlight Mode.</em></h2>
+        </div>
+        <p>The hero rotates through gallery images automatically for a big-screen, eye-catching showcase. Open any photo for a cinematic full-screen autoplay experience.</p>
+      </div>
+
+      <div class="mini-rail" id="miniRail"></div>
+    </section>
+
+    <section class="section gallery-section" id="gallery">
+      <div class="section-head split">
+        <div>
+          <span class="micro-label">THE ARCHIVE</span>
+          <h2>Every Photo <em>Tells The Story.</em></h2>
+        </div>
+        <div class="gallery-right">
+          <p>Filter by category, then open any photo. In full-screen mode, the gallery can autoplay through all images automatically.</p>
+          <div class="filters">
+            <button class="filter active" data-filter="all">ALL</button>
+            <button class="filter" data-filter="leadership">LEADERSHIP</button>
+            <button class="filter" data-filter="service">SERVICE</button>
+            <button class="filter" data-filter="drill">DRILL</button>
+            <button class="filter" data-filter="adventure">ADVENTURE</button>
+            <button class="filter" data-filter="academics">ACADEMICS</button>
+            <button class="filter" data-filter="events">EVENTS</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+
+    <section class="section legacy-panel-wrap">
+      <div class="legacy-panel">
+        <div class="legacy-copy">
+          <span class="micro-label">THE CHARGER STANDARD</span>
+          <h2>Beyond Photos.<br><em>This Is The Legacy.</em></h2>
+          <p>This gallery preserves the energy, discipline, teamwork, citizenship, service, and excellence that define Callaway JROTC. The design is optimized to be dramatic and attention-grabbing on large screens.</p>
+        </div>
+        <div class="legacy-badges">
+          <span>LEADERSHIP</span>
+          <span>SERVICE</span>
+          <span>DISCIPLINE</span>
+          <span>TEAMWORK</span>
+          <span>EXCELLENCE</span>
+          <span>PRIDE</span>
+        </div>
+        <div class="legacy-watermark">4</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>CALLAWAY JROTC</strong><span>4th Battalion • Chargers</span></div>
+    <a href="admin.html">Manage Gallery</a>
+  </footer>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lightbox-bg-glow"></div>
+    <button class="lightbox-close" id="closeBtn">×</button>
+    <button class="lightbox-nav prev" id="prevBtn">‹</button>
+
+    <div class="lightbox-shell">
+      <div class="lightbox-topbar">
+        <div class="lightbox-pill auto"><span class="pill-label">AUTOPLAY</span><strong id="autoplayState">ON</strong></div>
+        <button class="lightbox-toggle-btn" id="toggleAutoplayBtn">PAUSE AUTOPLAY</button>
+      </div>
+
+      <div class="lightbox-image-wrap">
+        <img id="lightboxImage" alt="">
+        <div class="big-num" id="bigNum">01</div>
+        <div class="lightbox-progress-shell">
+          <div class="lightbox-progress" id="lightboxProgress"></div>
+        </div>
+      </div>
+
+      <div class="lightbox-meta">
+        <div class="meta-copy">
+          <span id="lbCategory"></span>
+          <h3 id="lbTitle"></h3>
+          <p id="lbCaption"></p>
+        </div>
+        <div class="meta-side">
+          <strong id="lbCount"></strong>
+          <small>5 SECOND CINEMATIC ROTATION</small>
+        </div>
       </div>
     </div>
+
+    <button class="lightbox-nav next" id="nextBtn">›</button>
   </div>
-  <div class="gallery-grid" id="galleryGrid"></div>
-</section>
 
-<section class="legacy" id="legacy">
-  <div class="legacy-card"><span class="micro">THE CHARGER STANDARD</span><h2>More Than Photos.<br><em>This Is The Legacy.</em></h2><p>Discipline. Citizenship. Service. Confidence. Teamwork. Excellence. This gallery preserves the people and moments that define Callaway JROTC.</p><div class="tags"><span>LEADERSHIP</span><span>SERVICE</span><span>CITIZENSHIP</span><span>TEAMWORK</span><span>EXCELLENCE</span></div><div class="watermark">4</div></div>
-</section>
-</main>
-
-<footer><div><strong>CALLAWAY JROTC</strong><span>4th Battalion • Chargers</span></div><a href="admin.html">Manage Gallery</a></footer>
-
-<div class="lightbox" id="lightbox">
-  <button class="close" id="closeBtn">×</button><button class="nav prev" id="prevBtn">‹</button>
-  <div class="lightbox-shell"><div class="lightbox-image-wrap"><img id="lightboxImage" alt=""><div id="bigNum" class="big-num">01</div></div>
-  <div class="lightbox-meta"><div><span id="lbCategory"></span><h3 id="lbTitle"></h3><p id="lbCaption"></p></div><strong id="lbCount"></strong></div></div>
-  <button class="nav next" id="nextBtn">›</button>
-</div>
-
-<script src="gallery-data.js"></script>
-<script src="app.js"></script>
+  <script src="gallery-data.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
