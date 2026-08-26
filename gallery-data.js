@@ -5,5 +5,12 @@ window.CALLAWAY_GALLERY = [
     "caption": "",
     "category": "leadership",
     "layout": "normal"
+  },
+  {
+    "image": "images/gala.jpg",
+    "title": "Gala",
+    "caption": "",
+    "category": "events",
+    "layout": "normal"
   }
 ];
