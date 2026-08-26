@@ -1,60 +1,47 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Callaway JROTC Gallery Manager</title><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="admin.css"></head>
-<body><header><div class="brand">4 <span>CALLAWAY JROTC<br><b>GALLERY MANAGER</b></span></div><a href="index.html">← VIEW GALLERY</a></header>
-<main><section class="intro"><span>NO SERVER • NO SCRIPT EDITING</span><h1>Manage Your<br><em>Photo Gallery.</em></h1><p>Add and organize photos here. Large JPGs are automatically resized. Add and organize your photos, then use <b>Publish to GitHub</b> to send the images and gallery data directly to your repository.</p></section>
-<section class="workspace"><aside>
-<h2>Add Photo</h2><label>Upload Photo</label><input type="file" id="fileInput" accept="image/*"><div id="fileName" class="small">No photo selected</div><img id="photoPreview" hidden style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:9px;border:1px solid rgba(255,255,255,.10)">
-<label>OR Image URL</label><input id="urlInput" placeholder="https://...">
-<label>Title</label><input id="titleInput" placeholder="Cadet Challenge">
-<label>Caption</label><textarea id="captionInput" rows="3"></textarea>
-<label>Category</label><select id="categoryInput"><option value="leadership">Leadership</option><option value="service">Service</option><option value="drill">Drill & Color Guard</option><option value="adventure">Adventure</option><option value="academics">Academics</option><option value="events">Events</option></select>
-<label>Layout</label><select id="layoutInput"><option value="normal">Normal</option><option value="wide">Wide</option><option value="tall">Tall</option></select>
-<button id="addBtn" class="add">+ ADD PHOTO</button>
-</aside>
-<section class="manager"><div class="manager-head"><div><span>CURRENT GALLERY</span><h2><b id="count">0</b> Photos</h2></div><div class="actions"><button id="resetBtn">RESET SAMPLE</button><button id="exportBtn" class="export">EXPORT BACKUP PACKAGE</button></div></div>
-<div class="github-publish">
-  <div class="publish-head">
-    <div>
-      <span class="eyebrow">DIRECT PUBLISH</span>
-      <h3>Publish To GitHub</h3>
-    </div>
-    <div class="secure-note">TOKEN ENTERED FOR THIS SESSION ONLY</div>
-  </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Callaway JROTC Gallery Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<header><div class="brand"><div class="badge">4</div><div><span>CALLAWAY JROTC</span><strong>GALLERY MANAGER</strong></div></div><a href="index.html">← VIEW GALLERY</a></header>
+<main>
+<section class="intro"><span>ONE CLEAN WORKFLOW</span><h1>Choose. Preview.<br><em>Publish.</em></h1><p>No demo photos. No local database. No export packages. New photos are added to the current GitHub gallery and never replace existing entries.</p></section>
+<section class="workspace">
+  <aside class="add-panel">
+    <div class="step"><span>01</span><h2>Add Photo</h2></div>
+    <label class="dropbox"><input id="fileInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"><strong>CHOOSE PHOTO</strong><small>JPG, PNG, or WebP • max 20 MB</small></label>
+    <div id="fileStatus" class="file-status">No photo selected</div>
+    <img id="preview" class="preview" hidden alt="Selected photo preview">
+    <label>Title</label><input id="titleInput" placeholder="Example: Cadet Challenge">
+    <label>Caption</label><textarea id="captionInput" rows="3" placeholder="Optional short description"></textarea>
+    <div class="two"><div><label>Category</label><select id="categoryInput"><option value="leadership">Leadership</option><option value="service">Service</option><option value="drill">Drill & Color Guard</option><option value="adventure">Adventure</option><option value="academics">Academics</option><option value="events">Events</option></select></div><div><label>Layout</label><select id="layoutInput"><option value="normal">Normal</option><option value="wide">Wide</option><option value="tall">Tall</option></select></div></div>
+    <button id="queueBtn" class="orange-btn">+ ADD TO PUBLISH QUEUE</button>
+  </aside>
 
-  <div class="publish-grid">
-    <div>
-      <label>GitHub Owner</label>
-      <input id="ghOwner" value="djcaptaind" autocomplete="off">
-    </div>
-    <div>
-      <label>Repository</label>
-      <input id="ghRepo" value="Photo-Gallery" autocomplete="off">
-    </div>
-    <div>
-      <label>Branch</label>
-      <input id="ghBranch" value="main" autocomplete="off">
-    </div>
-    <div>
-      <label>Fine-grained GitHub Token</label>
-      <input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="new-password">
-    </div>
-  </div>
+  <section class="main-panel">
+    <div class="panel-head"><div><span class="micro">CURRENT PUBLISHED GALLERY</span><h2><b id="publishedCount">0</b> Photos</h2></div><button id="reloadBtn" class="dark-btn">RELOAD FROM GITHUB</button></div>
+    <div id="publishedGrid" class="cards"></div>
 
-  <div class="publish-explain">
-    Paste a fine-grained token for <b>Photo-Gallery</b> with <b>Contents: Read and write</b>. The token is used only while this page is open and is never written into your gallery files.
-  </div>
+    <div class="queue-section"><div class="panel-head"><div><span class="micro">READY TO PUBLISH</span><h2><b id="queueCount">0</b> New Photos</h2></div><button id="clearQueueBtn" class="dark-btn">CLEAR QUEUE</button></div><div id="queueGrid" class="cards"></div></div>
 
-  <div class="publish-actions">
-    <button id="testGitHubBtn" class="secondary">TEST CONNECTION</button>
-    <button id="publishGitHubBtn" class="publish-btn">PUBLISH TO GITHUB</button>
-  </div>
-
-  <div id="publishProgress" class="publish-progress" hidden>
-    <div class="progress-top"><span id="progressText">Preparing…</span><b id="progressPct">0%</b></div>
-    <div class="progress-track"><div id="progressBar"></div></div>
-  </div>
-  <div id="githubStatus" class="github-status" hidden></div>
-</div>
-
-<div class="help">Export a ZIP package containing <b>gallery-data.js</b> and an <b>images</b> folder. Upload both to GitHub.</div><div id="cards" class="cards"></div></section>
-</section></main><div id="toast" class="toast"></div>
-<script src="gallery-data.js"></script><script src="zip-writer.js"></script><script src="admin.js"></script></body></html>
+    <div class="publish-box">
+      <div class="publish-title"><div><span class="micro">DIRECT GITHUB PUBLISH</span><h2>Publish Changes</h2></div><div class="session-pill">TOKEN USED FOR THIS SESSION ONLY</div></div>
+      <div class="repo-lock">Repository: <b>djcaptaind/Photo-Gallery</b> · Branch: <b>main</b></div>
+      <label>Fine-grained GitHub Token</label><input id="tokenInput" type="password" placeholder="github_pat_..." autocomplete="new-password">
+      <p class="token-help">Token must have access to <b>Photo-Gallery</b> with <b>Contents: Read and write</b>.</p>
+      <div class="publish-actions"><button id="testBtn" class="dark-btn">TEST CONNECTION</button><button id="publishBtn" class="orange-btn">PUBLISH TO GITHUB</button></div>
+      <div id="statusBox" class="status-box" hidden></div>
+      <div id="progressWrap" class="progress-wrap" hidden><div class="progress-top"><span id="progressText">Preparing…</span><b id="progressPct">0%</b></div><div class="progress-track"><div id="progressBar"></div></div></div>
+    </div>
+  </section>
+</section>
+</main>
+<div id="toast" class="toast"></div>
+<script src="admin.js"></script>
+</body>
+</html>
