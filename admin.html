@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Callaway JROTC Gallery Manager</title><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="admin.css"></head>
 <body><header><div class="brand">4 <span>CALLAWAY JROTC<br><b>GALLERY MANAGER</b></span></div><a href="index.html">← VIEW GALLERY</a></header>
-<main><section class="intro"><span>NO SERVER • NO SCRIPT EDITING</span><h1>Manage Your<br><em>Photo Gallery.</em></h1><p>Add and organize photos here. Large JPGs are automatically resized for the gallery. When finished, click <b>Export gallery-data.js</b> and replace the old file in your GitHub repository.</p></section>
+<main><section class="intro"><span>NO SERVER • NO SCRIPT EDITING</span><h1>Manage Your<br><em>Photo Gallery.</em></h1><p>Add and organize photos here. Large JPGs are automatically resized. Add and organize your photos, then use <b>Publish to GitHub</b> to send the images and gallery data directly to your repository.</p></section>
 <section class="workspace"><aside>
 <h2>Add Photo</h2><label>Upload Photo</label><input type="file" id="fileInput" accept="image/*"><div id="fileName" class="small">No photo selected</div><img id="photoPreview" hidden style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:9px;border:1px solid rgba(255,255,255,.10)">
 <label>OR Image URL</label><input id="urlInput" placeholder="https://...">
@@ -10,6 +10,51 @@
 <label>Layout</label><select id="layoutInput"><option value="normal">Normal</option><option value="wide">Wide</option><option value="tall">Tall</option></select>
 <button id="addBtn" class="add">+ ADD PHOTO</button>
 </aside>
-<section class="manager"><div class="manager-head"><div><span>CURRENT GALLERY</span><h2><b id="count">0</b> Photos</h2></div><div class="actions"><button id="resetBtn">RESET SAMPLE</button><button id="exportBtn" class="export">EXPORT gallery-data.js</button></div></div><div class="help">After exporting, upload the new <b>gallery-data.js</b> to GitHub and replace the old one.</div><div id="cards" class="cards"></div></section>
+<section class="manager"><div class="manager-head"><div><span>CURRENT GALLERY</span><h2><b id="count">0</b> Photos</h2></div><div class="actions"><button id="resetBtn">RESET SAMPLE</button><button id="exportBtn" class="export">EXPORT BACKUP PACKAGE</button></div></div>
+<div class="github-publish">
+  <div class="publish-head">
+    <div>
+      <span class="eyebrow">DIRECT PUBLISH</span>
+      <h3>Publish To GitHub</h3>
+    </div>
+    <div class="secure-note">TOKEN IS NOT SAVED</div>
+  </div>
+
+  <div class="publish-grid">
+    <div>
+      <label>GitHub Owner</label>
+      <input id="ghOwner" value="djcaptaind" autocomplete="off">
+    </div>
+    <div>
+      <label>Repository</label>
+      <input id="ghRepo" value="Photo-Gallery" autocomplete="off">
+    </div>
+    <div>
+      <label>Branch</label>
+      <input id="ghBranch" value="main" autocomplete="off">
+    </div>
+    <div>
+      <label>Fine-grained GitHub Token</label>
+      <input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="new-password">
+    </div>
+  </div>
+
+  <div class="publish-explain">
+    Use a fine-grained token limited to this repository with <b>Contents: Read and write</b>. 
+    The token stays only in this browser tab and is never written into the gallery files.
+  </div>
+
+  <div class="publish-actions">
+    <button id="testGitHubBtn" class="secondary">TEST CONNECTION</button>
+    <button id="publishGitHubBtn" class="publish-btn">PUBLISH TO GITHUB</button>
+  </div>
+
+  <div id="publishProgress" class="publish-progress" hidden>
+    <div class="progress-top"><span id="progressText">Preparing…</span><b id="progressPct">0%</b></div>
+    <div class="progress-track"><div id="progressBar"></div></div>
+  </div>
+</div>
+
+<div class="help">Export a ZIP package containing <b>gallery-data.js</b> and an <b>images</b> folder. Upload both to GitHub.</div><div id="cards" class="cards"></div></section>
 </section></main><div id="toast" class="toast"></div>
-<script src="gallery-data.js"></script><script src="admin.js"></script></body></html>
+<script src="gallery-data.js"></script><script src="zip-writer.js"></script><script src="admin.js"></script></body></html>

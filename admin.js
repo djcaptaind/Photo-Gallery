@@ -244,17 +244,236 @@ document.getElementById("resetBtn").onclick=async()=>{
 };
 
 document.getElementById("exportBtn").onclick=async()=>{
-  const ordered=await getAll();
-  ordered.sort((a,b)=>(a.order??0)-(b.order??0));
-  const cleaned=ordered.map(({id,order,...rest})=>rest);
-  const text="window.CALLAWAY_GALLERY = "+JSON.stringify(cleaned,null,2)+";";
-  const blob=new Blob([text],{type:"text/javascript"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="gallery-data.js";
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-  toast("gallery-data.js exported");
+  const button=document.getElementById("exportBtn");
+  const oldText=button.textContent;
+  button.disabled=true;
+  button.textContent="BUILDING PACKAGE...";
+  try{
+    const ordered=await getAll();
+    ordered.sort((a,b)=>(a.order??0)-(b.order??0));
+    if(!ordered.length){toast("Nothing to export","error");return}
+
+    const entries=[];
+    const out=[];
+    const used=new Set();
+
+    function slugify(text){
+      return String(text||"photo").toLowerCase()
+        .replace(/[^a-z0-9]+/g,"-")
+        .replace(/^-+|-+$/g,"")
+        .slice(0,60)||"photo";
+    }
+    function uniqueName(base,ext){
+      let name=base+ext,n=2;
+      while(used.has(name)){name=base+"-"+n+ext;n++}
+      used.add(name);return name;
+    }
+
+    for(let i=0;i<ordered.length;i++){
+      const p=ordered[i];
+      let imagePath=p.image;
+      if(typeof p.image==="string" && p.image.startsWith("data:image/")){
+        const m=p.image.match(/^data:image\/([^;]+);base64,(.+)$/);
+        if(m){
+          let ext=m[1].toLowerCase();
+          if(ext==="jpeg")ext="jpg";
+          if(!["jpg","png","webp","gif"].includes(ext))ext="jpg";
+          const filename=uniqueName(slugify(p.title||("photo-"+(i+1))),"."+ext);
+          entries.push({name:"images/"+filename,data:m[2],base64:true});
+          imagePath="images/"+filename;
+        }
+      }
+      const {id,order,...rest}=p;
+      out.push({...rest,image:imagePath});
+    }
+
+    const galleryText="window.CALLAWAY_GALLERY = "+JSON.stringify(out,null,2)+";";
+    entries.push({name:"gallery-data.js",data:galleryText});
+    entries.push({name:"UPLOAD-INSTRUCTIONS.txt",data:
+`CALLAWAY JROTC GALLERY - GITHUB UPLOAD PACKAGE
+
+1. Extract this ZIP.
+2. Upload gallery-data.js to the ROOT of your GitHub Photo-Gallery repository and replace the old file.
+3. Open the repository's images folder.
+4. Upload every image contained in this package's images folder.
+5. Commit the changes.
+6. Wait for GitHub Pages to redeploy.
+
+IMPORTANT: Do not upload this ZIP file itself to GitHub.
+`});
+
+    const blob=await window.makeStoredZip(entries);
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="Callaway_JROTC_Gallery_Upload_Package.zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast("Upload package created");
+  }catch(err){
+    console.error(err);
+    toast("Could not build upload package: "+(err.message||"unknown error"),"error");
+  }finally{
+    button.disabled=false;
+    button.textContent=oldText;
+  }
+};
+
+
+
+// ============================================================
+// DIRECT GITHUB PUBLISH
+// Uses GitHub Contents API from the browser.
+// Token is intentionally never stored in IndexedDB/localStorage.
+// ============================================================
+function ghValue(id){return document.getElementById(id).value.trim()}
+function githubHeaders(token){
+  return {
+    "Accept":"application/vnd.github+json",
+    "Authorization":"Bearer "+token,
+    "X-GitHub-Api-Version":"2022-11-28",
+    "Content-Type":"application/json"
+  };
+}
+function utf8ToBase64(text){
+  const bytes=new TextEncoder().encode(text);
+  let bin="";
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    bin+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunk,bytes.length)));
+  }
+  return btoa(bin);
+}
+function dataUrlParts(dataUrl){
+  const m=String(dataUrl||"").match(/^data:image\/([^;]+);base64,(.+)$/);
+  if(!m)return null;
+  let ext=m[1].toLowerCase();
+  if(ext==="jpeg")ext="jpg";
+  if(!["jpg","png","webp","gif"].includes(ext))ext="jpg";
+  return {ext,base64:m[2]};
+}
+function ghSlug(text){
+  return String(text||"photo").toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"")
+    .slice(0,55)||"photo";
+}
+async function ghJson(url,options={}){
+  const res=await fetch(url,options);
+  let body=null;
+  try{body=await res.json()}catch(_){}
+  if(!res.ok){
+    const msg=(body&&body.message)?body.message:`GitHub returned ${res.status}`;
+    throw new Error(msg);
+  }
+  return body;
+}
+function setPublishProgress(done,total,text){
+  const wrap=document.getElementById("publishProgress");
+  wrap.hidden=false;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById("progressText").textContent=text;
+  document.getElementById("progressPct").textContent=pct+"%";
+  document.getElementById("progressBar").style.width=pct+"%";
+}
+async function getExistingContentSha(owner,repo,path,branch,token){
+  const url=`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`;
+  const res=await fetch(url,{headers:githubHeaders(token)});
+  if(res.status===404)return null;
+  let body=null;try{body=await res.json()}catch(_){}
+  if(!res.ok)throw new Error((body&&body.message)||`GitHub returned ${res.status}`);
+  return body.sha||null;
+}
+async function putGitHubFile(owner,repo,path,branch,token,contentBase64,message){
+  const sha=await getExistingContentSha(owner,repo,path,branch,token);
+  const payload={message,content:contentBase64,branch};
+  if(sha)payload.sha=sha;
+  const url=`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+  return ghJson(url,{method:"PUT",headers:githubHeaders(token),body:JSON.stringify(payload)});
+}
+
+document.getElementById("testGitHubBtn").onclick=async()=>{
+  const owner=ghValue("ghOwner"),repo=ghValue("ghRepo"),branch=ghValue("ghBranch"),token=ghValue("ghToken");
+  if(!owner||!repo||!branch||!token){toast("Complete all GitHub fields","error");return}
+  const btn=document.getElementById("testGitHubBtn");
+  const old=btn.textContent;btn.disabled=true;btn.textContent="TESTING...";
+  try{
+    const info=await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,{headers:githubHeaders(token)});
+    await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`,{headers:githubHeaders(token)});
+    toast(`Connected to ${info.full_name}`);
+  }catch(err){
+    console.error(err);toast("GitHub connection failed: "+err.message,"error");
+  }finally{btn.disabled=false;btn.textContent=old}
+};
+
+document.getElementById("publishGitHubBtn").onclick=async()=>{
+  const owner=ghValue("ghOwner"),repo=ghValue("ghRepo"),branch=ghValue("ghBranch"),token=ghValue("ghToken");
+  if(!owner||!repo||!branch||!token){toast("Complete all GitHub fields","error");return}
+  const btn=document.getElementById("publishGitHubBtn");
+  const testBtn=document.getElementById("testGitHubBtn");
+  const old=btn.textContent;btn.disabled=true;testBtn.disabled=true;btn.textContent="PUBLISHING...";
+  try{
+    const ordered=await getAll();
+    ordered.sort((a,b)=>(a.order??0)-(b.order??0));
+    if(!ordered.length)throw new Error("There are no photos to publish.");
+
+    // Confirm repo + branch before writing.
+    await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,{headers:githubHeaders(token)});
+    await ghJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`,{headers:githubHeaders(token)});
+
+    const output=[];
+    const used=new Set();
+    const uploads=[];
+    for(let i=0;i<ordered.length;i++){
+      const p=ordered[i];
+      let imagePath=p.image;
+      const parts=dataUrlParts(p.image);
+      if(parts){
+        let base=ghSlug(p.title||("photo-"+(i+1)));
+        let filename=base+"."+parts.ext,n=2;
+        while(used.has(filename)){filename=base+"-"+n+"."+parts.ext;n++}
+        used.add(filename);
+        imagePath="images/"+filename;
+        uploads.push({path:imagePath,base64:parts.base64,title:p.title||filename});
+      }
+      const {id,order,...rest}=p;
+      output.push({...rest,image:imagePath});
+    }
+
+    const total=uploads.length+1;
+    let done=0;
+    setPublishProgress(done,total,"Preparing GitHub upload…");
+
+    for(const file of uploads){
+      setPublishProgress(done,total,"Uploading "+file.path+"…");
+      await putGitHubFile(owner,repo,file.path,branch,token,file.base64,"Gallery photo: "+file.title);
+      done++;
+      setPublishProgress(done,total,"Uploaded "+file.path);
+    }
+
+    const galleryText="window.CALLAWAY_GALLERY = "+JSON.stringify(output,null,2)+";";
+    setPublishProgress(done,total,"Updating gallery-data.js…");
+    await putGitHubFile(owner,repo,"gallery-data.js",branch,token,utf8ToBase64(galleryText),"Update Callaway JROTC photo gallery");
+    done++;
+    setPublishProgress(done,total,"Published successfully");
+    toast("Gallery published to GitHub");
+
+    // Update local records so already-published data URLs become repository paths.
+    for(let i=0;i<ordered.length;i++){
+      const updated=output[i];
+      ordered[i].image=updated.image;
+      await putRecord(ordered[i]);
+    }
+    await refresh();
+  }catch(err){
+    console.error(err);
+    setPublishProgress(0,1,"Publish failed");
+    toast("Publish failed: "+err.message,"error");
+  }finally{
+    btn.disabled=false;testBtn.disabled=false;btn.textContent=old;
+  }
 };
 
 (async function init(){
