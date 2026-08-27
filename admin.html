@@ -10,7 +10,7 @@
 <body>
 <header><div class="brand"><div class="badge">4</div><div><span>CALLAWAY JROTC</span><strong>GALLERY MANAGER</strong></div></div><a href="index.html">← VIEW GALLERY</a></header>
 <main>
-<section class="intro"><span>ONE CLEAN WORKFLOW</span><h1>Choose. Preview.<br><em>Publish.</em></h1><p>No demo photos. No local database. No export packages. New photos are added to the current GitHub gallery and never replace existing entries.</p></section>
+<section class="intro"><span>ONE CLEAN WORKFLOW</span><h1>Choose. Preview.<br><em>Publish.</em></h1><p>No demo photos. No local database. New photos are safely added to the current GitHub gallery. Choose an Event Theme to give each event its own cinematic environment.</p></section>
 <section class="workspace">
   <aside class="add-panel">
     <div class="step"><span>01</span><h2>Add Photo</h2></div>
@@ -20,6 +20,21 @@
     <label>Title</label><input id="titleInput" placeholder="Example: Cadet Challenge">
     <label>Caption</label><textarea id="captionInput" rows="3" placeholder="Optional short description"></textarea>
     <div class="two"><div><label>Category</label><select id="categoryInput"><option value="leadership">Leadership</option><option value="service">Service</option><option value="drill">Drill & Color Guard</option><option value="adventure">Adventure</option><option value="academics">Academics</option><option value="events">Events</option></select></div><div><label>Layout</label><select id="layoutInput"><option value="normal">Normal</option><option value="wide">Wide</option><option value="tall">Tall</option></select></div></div>
+    <label>Event Theme</label>
+    <select id="eventThemeInput">
+      <option value="military-ball">Military Ball / Gala</option>
+      <option value="color-guard">Color Guard / Ceremony</option>
+      <option value="drill-competition">Drill Competition</option>
+      <option value="cadet-challenge">Cadet Challenge / Fitness</option>
+      <option value="adventure-training">Adventure Training / ATU</option>
+      <option value="academics-college">Academics / College Visit</option>
+      <option value="stem-aviation">STEM / Aviation</option>
+      <option value="community-service">Community Service</option>
+      <option value="awards-promotion">Awards / Promotion</option>
+      <option value="classroom">Classroom / Instruction</option>
+      <option value="auto">Auto From Category</option>
+    </select>
+    <div class="theme-help">The selected theme controls the cinematic background and lighting in Spotlight. All photos from the same event can use the same theme.</div>
     <button id="queueBtn" class="orange-btn">+ ADD TO PUBLISH QUEUE</button>
   </aside>
 
