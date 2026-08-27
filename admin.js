@@ -18,7 +18,7 @@ const themeLabels={
 };
 let published=[];
 let queue=[];
-let selectedData="";
+let selectedFiles=[];
 const $=id=>document.getElementById(id);
 function toast(msg,type="ok"){const t=$("toast");t.textContent=msg;t.style.color=type==="error"?"#ffd2d7":"#fff";t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
 function status(msg,type="ok"){const b=$("statusBox");b.hidden=false;b.className=`status-box ${type}`;b.textContent=msg}
@@ -32,61 +32,101 @@ function readFile(file){return new Promise((resolve,reject)=>{const r=new FileRe
 async function optimize(file){const raw=await readFile(file);try{const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=raw});const maxW=1800,maxH=1400,scale=Math.min(1,maxW/img.naturalWidth,maxH/img.naturalHeight),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false});ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);return c.toDataURL("image/jpeg",.84)}catch(_){return raw}}
 function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function renderPublished(){
-  const g=$("publishedGrid");
-  g.innerHTML="";
-  $("publishedCount").textContent=published.length;
-  if(!published.length){
-    g.innerHTML='<div class="empty">Gallery is empty. Add your first real Callaway JROTC photo.</div>';
-    return;
-  }
-
+  const g=$("publishedGrid"); g.innerHTML=""; $("publishedCount").textContent=published.length;
+  if(!published.length){g.innerHTML='<div class="empty">Gallery is empty. Add your first real Callaway JROTC photo.</div>';return;}
   published.forEach((p,i)=>{
-    const c=document.createElement("article");
-    c.className="card";
-    const currentTheme=p.eventTheme||"auto";
-    const themeOptions=Object.entries(themeLabels).map(([value,label])=>
-      `<option value="${value}" ${value===currentTheme?"selected":""}>${esc(label)}</option>`
-    ).join("");
-
-    c.innerHTML=`
-      <img src="${p.image}" alt="">
-      <div class="card-body">
-        <span>${esc(labels[p.category]||p.category||"Gallery")}</span>
-        <h3>${esc(p.title||"Photo")}</h3>
-        <p>${esc(p.caption||"")}</p>
-        <label class="inline-label">Event Theme</label>
-        <select class="published-theme-select">${themeOptions}</select>
-        <button class="save-theme-btn">SAVE THEME</button>
-        <div class="card-actions"><button class="danger">REMOVE FROM GALLERY</button></div>
-      </div>`;
-
-    const select=c.querySelector(".published-theme-select");
-    const saveBtn=c.querySelector(".save-theme-btn");
-    const removeBtn=c.querySelector(".danger");
-
-    saveBtn.onclick=()=>{
-      p.eventTheme=select.value;
-      saveBtn.textContent="THEME SAVED";
-      saveBtn.classList.add("saved");
-      setTimeout(()=>{saveBtn.textContent="SAVE THEME";saveBtn.classList.remove("saved")},1200);
-      toast("Theme updated — publish to make it live");
+    const c=document.createElement("article"); c.className="card";
+    const categoryOptions=Object.entries(labels).map(([v,l])=>`<option value="${v}" ${v===(p.category||"events")?"selected":""}>${esc(l)}</option>`).join("");
+    const themeOptions=Object.entries(themeLabels).map(([v,l])=>`<option value="${v}" ${v===(p.eventTheme||"auto")?"selected":""}>${esc(l)}</option>`).join("");
+    const layoutOptions=["normal","wide","tall"].map(v=>`<option value="${v}" ${v===(p.layout||"normal")?"selected":""}>${v[0].toUpperCase()+v.slice(1)}</option>`).join("");
+    c.innerHTML=`<img src="${p.image}" alt=""><div class="card-body">
+      <span>${esc(labels[p.category]||p.category||"Gallery")}</span><h3>${esc(p.title||"Photo")}</h3>
+      <div class="edit-grid">
+        <div class="full"><label>Title</label><input class="edit-title" value="${esc(p.title||"")}"></div>
+        <div class="full"><label>Caption</label><textarea class="edit-caption" rows="3">${esc(p.caption||"")}</textarea></div>
+        <div><label>Category</label><select class="edit-category">${categoryOptions}</select></div>
+        <div><label>Layout</label><select class="edit-layout">${layoutOptions}</select></div>
+        <div class="full"><label>Event Theme</label><select class="edit-theme">${themeOptions}</select></div>
+      </div>
+      <button class="save-details-btn">SAVE PHOTO CHANGES</button>
+      <div class="card-actions"><button class="danger">REMOVE FROM GALLERY</button></div>
+    </div>`;
+    const save=c.querySelector(".save-details-btn"), remove=c.querySelector(".danger");
+    save.onclick=()=>{
+      p.title=c.querySelector(".edit-title").value.trim()||p.title||"Photo";
+      p.caption=c.querySelector(".edit-caption").value.trim();
+      p.category=c.querySelector(".edit-category").value;
+      p.layout=c.querySelector(".edit-layout").value;
+      p.eventTheme=c.querySelector(".edit-theme").value;
+      save.textContent="CHANGES SAVED"; save.classList.add("saved");
+      setTimeout(()=>{save.textContent="SAVE PHOTO CHANGES";save.classList.remove("saved")},1200);
+      toast("Photo changes saved — Publish to GitHub to make them live");
     };
-
-    removeBtn.onclick=()=>{
-      if(confirm(`Remove "${p.title||'this photo'}" from the published gallery on next publish?`)){
-        p._remove=true;
-        c.style.opacity=.35;
-        removeBtn.textContent="MARKED FOR REMOVAL";
-      }
-    };
-
+    remove.onclick=()=>{if(confirm(`Remove "${p.title||"this photo"}" from the published gallery on next publish?`)){p._remove=true;c.style.opacity=.35;remove.textContent="MARKED FOR REMOVAL"}};
     g.appendChild(c);
   });
 }
-function renderQueue(){const g=$("queueGrid");g.innerHTML="";$("queueCount").textContent=queue.length;if(!queue.length){g.innerHTML='<div class="empty">No new photos queued.</div>';return}queue.forEach((p,i)=>{const c=document.createElement("article");c.className="card";c.innerHTML=`<img src="${p.data}" alt=""><div class="card-body"><span>${esc(labels[p.category]||p.category)}</span><span class="theme-chip">${esc(themeLabels[p.eventTheme]||"Auto Theme")}</span><h3>${esc(p.title)}</h3><p>${esc(p.caption||"")}</p><div class="card-actions"><button>REMOVE</button></div></div>`;c.querySelector("button").onclick=()=>{queue.splice(i,1);renderQueue()};g.appendChild(c)})}
+
+function renderQueue(){
+  const g=$("queueGrid"); g.innerHTML=""; $("queueCount").textContent=queue.length;
+  if(!queue.length){g.innerHTML='<div class="empty">No new photos queued.</div>';return;}
+  queue.forEach((p,i)=>{
+    const c=document.createElement("article"); c.className="card";
+    const categoryOptions=Object.entries(labels).map(([v,l])=>`<option value="${v}" ${v===p.category?"selected":""}>${esc(l)}</option>`).join("");
+    const themeOptions=Object.entries(themeLabels).map(([v,l])=>`<option value="${v}" ${v===p.eventTheme?"selected":""}>${esc(l)}</option>`).join("");
+    const layoutOptions=["normal","wide","tall"].map(v=>`<option value="${v}" ${v===p.layout?"selected":""}>${v[0].toUpperCase()+v.slice(1)}</option>`).join("");
+    c.innerHTML=`<img src="${p.data}" alt=""><div class="card-body"><div class="edit-grid">
+      <div class="full"><label>Title</label><input class="q-title" value="${esc(p.title)}"></div>
+      <div class="full"><label>Caption</label><textarea class="q-caption" rows="2">${esc(p.caption||"")}</textarea></div>
+      <div><label>Category</label><select class="q-category">${categoryOptions}</select></div>
+      <div><label>Layout</label><select class="q-layout">${layoutOptions}</select></div>
+      <div class="full"><label>Event Theme</label><select class="q-theme">${themeOptions}</select></div>
+    </div><div class="card-actions"><button class="q-save">SAVE</button><button class="q-remove">REMOVE</button></div></div>`;
+    c.querySelector(".q-save").onclick=()=>{
+      p.title=c.querySelector(".q-title").value.trim()||p.title;
+      p.caption=c.querySelector(".q-caption").value.trim();
+      p.category=c.querySelector(".q-category").value;
+      p.layout=c.querySelector(".q-layout").value;
+      p.eventTheme=c.querySelector(".q-theme").value;
+      toast("Queued photo updated");
+    };
+    c.querySelector(".q-remove").onclick=()=>{queue.splice(i,1);renderQueue()};
+    g.appendChild(c);
+  });
+}
+
 async function reload(){try{const r=await getRemote();published=r.items;renderPublished();status(`LOADED FROM GITHUB\nPublished photos: ${published.length}`,"ok")}catch(e){status("LOAD FAILED\n"+e.message,"error")}}
-$("fileInput").onchange=async e=>{const f=e.target.files&&e.target.files[0];selectedData="";if(!f)return;if(f.size>20*1024*1024){toast("Photo is over 20 MB","error");return}$("fileStatus").textContent=`Preparing ${f.name} • ${formatBytes(f.size)}`;try{selectedData=await optimize(f);$("preview").src=selectedData;$("preview").hidden=false;$("fileStatus").textContent=`${f.name} • READY`;toast("Photo ready") }catch(err){$("fileStatus").textContent="Could not prepare photo";toast(err.message,"error")}};
-$("queueBtn").onclick=()=>{const title=$("titleInput").value.trim();if(!selectedData)return toast("Choose a photo first","error");if(!title)return toast("Enter a title","error");queue.push({data:selectedData,title,caption:$("captionInput").value.trim(),category:$("categoryInput").value,layout:$("layoutInput").value,eventTheme:$("eventThemeInput").value});selectedData="";$("fileInput").value="";$("preview").src="";$("preview").hidden=true;$("fileStatus").textContent="No photo selected";$("titleInput").value="";$("captionInput").value="";renderQueue();toast("Added to publish queue")};
+$("fileInput").onchange=async e=>{
+  const files=[...(e.target.files||[])]; selectedFiles=[]; $("multiPreview").innerHTML=""; $("preview").hidden=true;
+  if(!files.length){$("fileStatus").textContent="No photos selected";return;}
+  const valid=files.filter(f=>f.size<=20*1024*1024);
+  if(valid.length!==files.length)toast(`${files.length-valid.length} photo(s) over 20 MB were skipped`,"error");
+  $("fileStatus").textContent=`Preparing ${valid.length} photo(s)...`;
+  for(let i=0;i<valid.length;i++){
+    const f=valid[i];
+    try{
+      const data=await optimize(f);
+      const base=f.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").trim();
+      selectedFiles.push({file:f,data,defaultTitle:base||`Photo ${i+1}`});
+      const t=document.createElement("div"); t.className="mini-preview";
+      t.innerHTML=`<img src="${data}" alt=""><span>${esc(f.name)}</span>`; $("multiPreview").appendChild(t);
+      $("fileStatus").textContent=`Prepared ${selectedFiles.length} of ${valid.length} photo(s)...`;
+    }catch(err){console.error(err)}
+  }
+  $("fileStatus").textContent=`${selectedFiles.length} PHOTO(S) READY`; toast(`${selectedFiles.length} photo(s) ready`);
+};
+
+$("queueBtn").onclick=()=>{
+  if(!selectedFiles.length)return toast("Choose one or more photos first","error");
+  const sharedTitle=$("titleInput").value.trim(), sharedCaption=$("captionInput").value.trim();
+  const category=$("categoryInput").value, layout=$("layoutInput").value, eventTheme=$("eventThemeInput").value;
+  selectedFiles.forEach(item=>{
+    queue.push({data:item.data,title:(selectedFiles.length===1&&sharedTitle)?sharedTitle:item.defaultTitle,caption:sharedCaption,category,layout,eventTheme});
+  });
+  selectedFiles=[];$("fileInput").value="";$("multiPreview").innerHTML="";$("fileStatus").textContent="No photos selected";$("titleInput").value="";$("captionInput").value="";
+  renderQueue();toast("Photos added to publish queue");
+};
+
 $("clearQueueBtn").onclick=()=>{queue=[];renderQueue()};
 $("reloadBtn").onclick=reload;
 $("testBtn").onclick=async()=>{const token=$("tokenInput").value.trim();if(!token)return status("Paste your GitHub token first.","error");try{const repo=await api(API_BASE,{headers:headers(token)});status(`CONNECTED\n${repo.full_name}\nBranch: ${BRANCH}\nReady to publish.`,"ok")}catch(e){status("CONNECTION FAILED\n"+e.message,"error")}};
@@ -99,6 +139,6 @@ $("publishBtn").onclick=async()=>{const token=$("tokenInput").value.trim();if(!t
       .filter(r=>!published.some(p=>p._remove&&p.id&&p.id===r.id))
       .map(r=>{
         const edited=published.find(p=>p.id&&r.id&&p.id===r.id);
-        return edited ? {...r,eventTheme:edited.eventTheme||"auto"} : r;
+        return edited?{...r,title:edited.title||r.title||"Photo",caption:edited.caption||"",category:edited.category||r.category||"events",layout:edited.layout||r.layout||"normal",eventTheme:edited.eventTheme||r.eventTheme||"auto"}:r;
       });const additions=[];for(const q of queue){const parts=dataParts(q.data);if(!parts)throw new Error("A queued image could not be encoded.");const id=`p-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;const filename=`${slug(q.title)}-${id.slice(-6)}.${parts.ext}`;const path=`images/${filename}`;const raw=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`;additions.push({id,path,raw,base64:parts.base64,title:q.title,caption:q.caption,category:q.category,layout:q.layout,eventTheme:q.eventTheme||"auto"})}const total=additions.length+1;let done=0;for(const a of additions){setProgress(done,total,`Uploading ${a.title}...`);await putBase64(a.path,a.base64,token,`Add gallery photo: ${a.title}`);next.push({id:a.id,image:a.raw,title:a.title,caption:a.caption,category:a.category,layout:a.layout,eventTheme:a.eventTheme||"auto"});done++;setProgress(done,total,`Uploaded ${a.title}`)}setProgress(done,total,"Updating gallery list...");const json=JSON.stringify(next,null,2)+"\n";await putBase64("gallery-data.json",encode64(json),token,"Update Callaway JROTC gallery",remote.sha);done++;setProgress(done,total,"Published successfully");queue=[];published=next;renderQueue();renderPublished();status(`PUBLISHED SUCCESSFULLY\nExisting photos preserved: ${remote.items.length}\nNew photos added: ${additions.length}\nTotal live photos: ${next.length}\n\nOpen the gallery and refresh — no Pages redeploy is required for photo updates.`,"ok");toast("Gallery published") }catch(e){console.error(e);status("PUBLISH FAILED\n"+e.message,"error");setProgress(0,1,"Publish failed");}finally{btn.disabled=false;btn.textContent="PUBLISH TO GITHUB"}};
 reload();renderQueue();

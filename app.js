@@ -27,6 +27,16 @@ function applyTheme(target,photo){
 }
 const ROTATE_MS=5000;
 
+const TRANSITIONS=["fx-dissolve","fx-push-in","fx-pull-back","fx-slide-left","fx-slide-right","fx-blur-focus","fx-tilt-in","fx-light-sweep"];
+let lastTransition="";
+function randomTransition(){const a=TRANSITIONS.filter(x=>x!==lastTransition);const c=a[Math.floor(Math.random()*a.length)];lastTransition=c;return c}
+function playPhotoTransition(img,stage){
+  TRANSITIONS.forEach(c=>{img.classList.remove(c);stage.classList.remove(c)});
+  void img.offsetWidth;
+  const fx=randomTransition();img.classList.add(fx);stage.classList.add(fx);
+}
+
+
 const themeDisplayLabels={
   "military-ball":"MILITARY BALL / GALA",
   "color-guard":"COLOR GUARD / CEREMONY",
@@ -101,8 +111,10 @@ function updateHero(){
   const p=photos[heroIndex];
   if(!p)return;
   $("heroBackdrop").style.backgroundImage=`url("${p.image}")`;
+  const heroFrame=document.querySelector(".hero-photo-frame");if(heroFrame)heroFrame.style.setProperty("--hero-img",`url("${p.image}")`);
   applyTheme($("home"),p);
   $("heroImage").src=p.image;
+  playPhotoTransition($("heroImage"),$("home"));
   $("heroTitle").textContent=p.title||"Callaway JROTC";
   $("heroCaption").textContent=p.caption||`${labels[p.category]||"Callaway JROTC"} • Building legacy.`;
   $("heroCurrent").textContent=String(heroIndex+1).padStart(2,"0");
@@ -216,7 +228,9 @@ function updateSpotlight(){
   const pre=new Image();
   pre.onload=()=>{
     setPhotoShape(pre);
-    $("spotImage").src=p.image;
+    const img=$("spotImage");
+    img.src=p.image;
+    playPhotoTransition(img,$("spotPhotoStage"));
   };
   pre.src=p.image;
 

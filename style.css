@@ -314,3 +314,29 @@ footer{min-height:95px;padding:24px 5vw;border-top:1px solid rgba(226,162,59,.14
 .cinema-title:after{
   content:attr(data-theme-label);
 }
+
+.hero-photo-frame{overflow:hidden;--hero-img:none}
+.hero-photo-frame:before{content:"";position:absolute;inset:0;background-image:var(--hero-img);background-size:cover;background-position:center;filter:blur(22px) brightness(.55) saturate(.95);transform:scale(1.08);opacity:.78}
+.hero-photo-frame img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain!important}
+.cinema-photo-stage.landscape img,.cinema-photo-stage.portrait img,.cinema-photo-stage.square img{width:auto!important;height:auto!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;transform:translate(-50%,-50%)}
+#spotImage,#heroImage{will-change:transform,opacity,filter}
+#spotImage.fx-dissolve,#heroImage.fx-dissolve{animation:fxDissolve .85s ease both}
+#spotImage.fx-push-in{animation:fxPushIn 1s cubic-bezier(.2,.75,.2,1) both}
+#spotImage.fx-pull-back{animation:fxPullBack 1s cubic-bezier(.2,.75,.2,1) both}
+#spotImage.fx-slide-left{animation:fxSlideLeft .9s cubic-bezier(.2,.75,.2,1) both}
+#spotImage.fx-slide-right{animation:fxSlideRight .9s cubic-bezier(.2,.75,.2,1) both}
+#spotImage.fx-blur-focus{animation:fxBlurFocus 1s ease both}
+#spotImage.fx-tilt-in{animation:fxTiltIn .95s cubic-bezier(.2,.75,.2,1) both}
+.cinema-photo-stage.fx-light-sweep:after,.hero.fx-light-sweep:after{content:"";position:absolute;z-index:20;inset:-20%;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,198,106,0) 42%,rgba(255,198,106,.52) 50%,rgba(255,255,255,.22) 53%,transparent 62%);transform:translateX(-100%);animation:fxLightSweep 1.1s ease both}
+#spotImage.fx-light-sweep,#heroImage.fx-light-sweep{animation:fxDissolve .75s ease both}
+#heroImage.fx-push-in{animation:heroPushIn 1s ease both}#heroImage.fx-pull-back{animation:heroPullBack 1s ease both}#heroImage.fx-slide-left{animation:heroSlideLeft .9s ease both}#heroImage.fx-slide-right{animation:heroSlideRight .9s ease both}#heroImage.fx-blur-focus{animation:heroBlurFocus 1s ease both}#heroImage.fx-tilt-in{animation:heroTiltIn .95s ease both}
+@keyframes fxDissolve{from{opacity:0;filter:brightness(.65)}to{opacity:1;filter:brightness(1)}}
+@keyframes fxPushIn{from{opacity:0;transform:translate(-50%,-50%) scale(.9)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes fxPullBack{from{opacity:0;transform:translate(-50%,-50%) scale(1.12)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes fxSlideLeft{from{opacity:0;transform:translate(calc(-50% + 90px),-50%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes fxSlideRight{from{opacity:0;transform:translate(calc(-50% - 90px),-50%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes fxBlurFocus{from{opacity:.15;filter:blur(18px) brightness(1.25);transform:translate(-50%,-50%) scale(1.04)}to{opacity:1;filter:blur(0) brightness(1);transform:translate(-50%,-50%) scale(1)}}
+@keyframes fxTiltIn{from{opacity:0;transform:translate(-50%,-50%) perspective(1000px) rotateY(7deg) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) perspective(1000px) rotateY(0) scale(1)}}
+@keyframes fxLightSweep{from{transform:translateX(-110%)}to{transform:translateX(110%)}}
+@keyframes heroPushIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}@keyframes heroPullBack{from{opacity:0;transform:scale(1.12)}to{opacity:1;transform:scale(1)}}@keyframes heroSlideLeft{from{opacity:0;transform:translateX(90px)}to{opacity:1;transform:translateX(0)}}@keyframes heroSlideRight{from{opacity:0;transform:translateX(-90px)}to{opacity:1;transform:translateX(0)}}@keyframes heroBlurFocus{from{opacity:.15;filter:blur(18px);transform:scale(1.04)}to{opacity:1;filter:blur(0);transform:scale(1)}}@keyframes heroTiltIn{from{opacity:0;transform:perspective(1000px) rotateY(7deg) scale(.96)}to{opacity:1;transform:perspective(1000px) rotateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){#spotImage,#heroImage{animation:none!important}}

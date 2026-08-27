@@ -13,9 +13,10 @@
 <section class="intro"><span>ONE CLEAN WORKFLOW</span><h1>Choose. Preview.<br><em>Publish.</em></h1><p>No demo photos. No local database. New photos are safely added to the current GitHub gallery. Choose an Event Theme to give each event its own cinematic environment.</p></section>
 <section class="workspace">
   <aside class="add-panel">
-    <div class="step"><span>01</span><h2>Add Photo</h2></div>
-    <label class="dropbox"><input id="fileInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"><strong>CHOOSE PHOTO</strong><small>JPG, PNG, or WebP • max 20 MB</small></label>
-    <div id="fileStatus" class="file-status">No photo selected</div>
+    <div class="step"><span>01</span><h2>Add Photos</h2></div>
+    <label class="dropbox"><input id="fileInput" type="file" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"><strong>CHOOSE PHOTOS</strong><small>Select one or many JPG, PNG, or WebP files • max 20 MB each</small></label>
+    <div id="fileStatus" class="file-status">No photos selected</div>
+    <div id="multiPreview" class="multi-preview"></div>
     <img id="preview" class="preview" hidden alt="Selected photo preview">
     <label>Title</label><input id="titleInput" placeholder="Example: Cadet Challenge">
     <label>Caption</label><textarea id="captionInput" rows="3" placeholder="Optional short description"></textarea>
@@ -35,7 +36,7 @@
       <option value="auto">Auto From Category</option>
     </select>
     <div class="theme-help">The selected theme controls the cinematic background and lighting in Spotlight. All photos from the same event can use the same theme.</div>
-    <button id="queueBtn" class="orange-btn">+ ADD TO PUBLISH QUEUE</button>
+    <button id="queueBtn" class="orange-btn">+ ADD SELECTED PHOTOS TO QUEUE</button>
   </aside>
 
   <section class="main-panel">

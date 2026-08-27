@@ -30,3 +30,13 @@
 }
 .save-theme-btn:hover{background:rgba(255,107,0,.15)}
 .save-theme-btn.saved{border-color:rgba(112,242,167,.36);background:rgba(112,242,167,.08);color:#9cf9c0}
+
+.multi-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.mini-preview{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#04111d}
+.mini-preview img{width:100%;height:100%;object-fit:cover}
+.mini-preview span{position:absolute;left:5px;right:5px;bottom:5px;padding:3px 5px;border-radius:5px;background:rgba(2,8,14,.78);font-size:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.edit-grid .full{grid-column:1/-1}.edit-grid label{margin:5px 0 4px}.edit-grid input,.edit-grid textarea,.edit-grid select{padding:8px;font-size:9px}
+.save-details-btn{width:100%;margin-top:8px;min-height:37px;border-radius:8px;border:1px solid rgba(255,107,0,.32);background:rgba(255,107,0,.08);color:#ffb175;font-size:8px;font-weight:900;letter-spacing:.08em;cursor:pointer}
+.save-details-btn.saved{border-color:rgba(112,242,167,.36);background:rgba(112,242,167,.08);color:#9cf9c0}
+@media(max-width:650px){.multi-preview{grid-template-columns:repeat(2,1fr)}.edit-grid{grid-template-columns:1fr}.edit-grid .full{grid-column:auto}}
