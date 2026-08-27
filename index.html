@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#020912">
+  <meta name="theme-color" content="#020812">
   <title>Callaway JROTC Legacy Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,179 +11,51 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="grain"></div>
+<div class="grain"></div>
+<header class="topbar">
+  <a class="brand" href="#home"><div class="brand-mark">4</div><div><span>CALLAWAY HIGH SCHOOL</span><strong>JROTC LEGACY GALLERY</strong></div></a>
+  <nav><a href="#gallery">Gallery</a><a href="#legacy">Legacy</a><a class="manage" href="admin.html">Manage Photos</a></nav>
+</header>
 
-  <header class="topbar">
-    <a href="#home" class="brand">
-      <div class="brand-mark">4</div>
-      <div>
-        <span>CALLAWAY HIGH SCHOOL</span>
-        <strong>JROTC LEGACY GALLERY</strong>
-      </div>
-    </a>
-    <nav>
-      <a href="#gallery">Gallery</a>
-      <a href="#legacy">Legacy</a>
-      <a class="admin-link" href="admin.html">Manage Photos</a>
-    </nav>
-  </header>
-
-  <main>
-    <section id="home" class="hero">
-      <div id="heroBlur" class="hero-blur"></div>
-      <div class="hero-vignette"></div>
-      <div class="hero-grid"></div>
-
-      <div class="hero-layout">
-        <div class="hero-copy">
-          <div class="kicker"><span></span>4TH BATTALION • CHARGERS</div>
-          <h1><span>OUR</span><span>MOMENTS.</span></h1>
-          <div class="outlined">OUR LEGACY.</div>
-          <p>Leadership. Service. Competition. Achievement. The people and moments that define Callaway JROTC.</p>
-
-          <div class="hero-actions">
-            <a href="#gallery" class="primary-btn">EXPLORE GALLERY <span>→</span></a>
-            <button id="spotlightBtn" class="glass-btn">LAUNCH CINEMATIC SPOTLIGHT</button>
-          </div>
-
-          <div class="hero-data">
-            <div><b id="photoCount">00</b><small>PHOTOS</small></div>
-            <div><b id="heroCurrent">01</b><small>NOW SHOWING</small></div>
-            <div><b>05s</b><small>AUTO ROTATION</small></div>
-          </div>
-        </div>
-
-        <div class="hero-photo-zone">
-          <div class="photo-frame-glow"></div>
-          <div class="photo-frame">
-            <img id="heroImage" alt="Featured Callaway JROTC photo">
-            <div class="photo-edge"></div>
-            <div class="photo-badge">
-              <span id="heroCategory">FEATURED</span>
-              <strong id="heroTitle">Callaway JROTC</strong>
-            </div>
-          </div>
-
-          <div class="hero-story-card">
-            <span>NOW SHOWING</span>
-            <p id="heroCaption"></p>
-            <div class="hero-progress"><div id="heroProgress"></div></div>
-            <div class="story-controls">
-              <button id="heroPrev">‹</button>
-              <button id="heroPlay">PAUSE</button>
-              <button id="heroNext">›</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="emptyHero" class="empty-hero" hidden>
-      <div class="empty-emblem">4</div>
-      <span>GALLERY READY</span>
-      <h2>THE NEXT GREAT<br><em>MOMENT STARTS HERE.</em></h2>
-      <p>Your gallery is empty. Publish your first real Callaway JROTC photo from the manager.</p>
-      <a class="primary-btn" href="admin.html">ADD FIRST PHOTO →</a>
-    </section>
-
-    <section id="gallery" class="gallery-section">
-      <div class="section-head">
-        <div>
-          <span class="micro">THE ARCHIVE</span>
-          <h2>Built To <em>Be Remembered.</em></h2>
-        </div>
-        <div class="right-copy">
-          <p>Each image gets room to breathe. No oversized text covering cadets. Click any photo to enter Cinematic Spotlight.</p>
-          <div class="filters">
-            <button class="filter active" data-filter="all">ALL</button>
-            <button class="filter" data-filter="leadership">LEADERSHIP</button>
-            <button class="filter" data-filter="service">SERVICE</button>
-            <button class="filter" data-filter="drill">DRILL</button>
-            <button class="filter" data-filter="adventure">ADVENTURE</button>
-            <button class="filter" data-filter="academics">ACADEMICS</button>
-            <button class="filter" data-filter="events">EVENTS</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="galleryGrid" class="gallery-grid"></div>
-      <div id="emptyGallery" class="empty-gallery" hidden>
-        <strong>NO PHOTOS PUBLISHED YET</strong>
-        <span>Use Manage Photos to add your first Callaway JROTC image.</span>
-      </div>
-    </section>
-
-    <section id="legacy" class="legacy">
-      <div class="legacy-panel">
-        <div>
-          <span class="micro">THE CHARGER STANDARD</span>
-          <h2>THE STORY<br><em>KEEPS MOVING.</em></h2>
-          <p>Designed for cadets to stop, look, and recognize themselves, their teams, and their accomplishments.</p>
-        </div>
-        <div class="legacy-tags">
-          <span>LEADERSHIP</span><span>SERVICE</span><span>TEAMWORK</span>
-          <span>DISCIPLINE</span><span>EXCELLENCE</span><span>PRIDE</span>
-        </div>
-        <div class="legacy-watermark">4</div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div><strong>CALLAWAY JROTC</strong><span>4th Battalion • Chargers</span></div>
-    <a href="admin.html">Manage Gallery</a>
-  </footer>
-
-  <!-- CINEMATIC SPOTLIGHT -->
-  <div id="spotlight" class="spotlight" aria-hidden="true">
-    <div id="spotlightBg" class="spotlight-bg"></div>
-    <div class="spotlight-shade"></div>
-    <div class="spotlight-grid"></div>
-
-    <button id="closeSpotlight" class="spot-close">×</button>
-
-    <div class="spot-shell">
-      <div class="spot-top">
-        <div class="live-pill"><span class="live-dot"></span> CINEMATIC SPOTLIGHT</div>
-        <div class="spot-autoplay">
-          <span>AUTOPLAY</span>
-          <b id="autoplayState">ON</b>
-          <button id="toggleAutoplay">PAUSE</button>
-        </div>
-      </div>
-
-      <div class="spot-main">
-        <button id="spotPrev" class="spot-arrow left">‹</button>
-
-        <div class="spot-photo-wrap">
-          <div class="spot-glow"></div>
-          <img id="spotImage" alt="">
-          <div class="spot-reflection"></div>
-          <div class="spot-progress"><div id="spotProgress"></div></div>
-        </div>
-
-        <button id="spotNext" class="spot-arrow right">›</button>
-      </div>
-
-      <div class="spot-info">
-        <div class="spot-copy">
-          <span id="spotCategory"></span>
-          <h2 id="spotTitle"></h2>
-          <p id="spotCaption"></p>
-        </div>
-        <div class="spot-number">
-          <b id="spotCurrent">01</b>
-          <span>/</span>
-          <small id="spotTotal">01</small>
-        </div>
-      </div>
-
-      <div class="filmstrip-wrap">
-        <div id="filmstrip" class="filmstrip"></div>
-      </div>
+<main>
+<section class="hero" id="home">
+  <div id="heroBg" class="hero-bg"></div><div class="hero-shade"></div><div class="grid"></div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow">4TH BATTALION • CHARGERS</div>
+      <h1><span>OUR MOMENTS.</span><em>OUR LEGACY.</em></h1>
+      <p>Leadership. Service. Competition. Achievement. The people and moments that define Callaway JROTC.</p>
+      <div class="actions"><a class="primary" href="#gallery">EXPLORE GALLERY →</a><button id="spotlightBtn" class="secondary">▶ LAUNCH CINEMATIC SPOTLIGHT</button></div>
+      <div class="stats"><div><b id="photoCount">00</b><small>PHOTOS</small></div><div><b id="heroCurrent">01</b><small>NOW SHOWING</small></div><div><b>05s</b><small>AUTO ROTATION</small></div></div>
+    </div>
+    <div class="hero-showcase">
+      <div class="stack back1"></div><div class="stack back2"></div>
+      <div class="hero-photo"><img id="heroImage" alt=""><div class="hero-frame"></div></div>
+      <div class="now-card"><span>NOW SHOWING</span><h3 id="heroTitle"></h3><p id="heroCaption"></p><div class="progress"><div id="heroProgress"></div></div><div class="controls"><button id="heroPrev">◀◀</button><button id="heroPlay">Ⅱ</button><button id="heroNext">▶▶</button></div></div>
     </div>
   </div>
+</section>
 
-  <script src="app.js"></script>
+<section id="emptyHero" class="empty" hidden><div class="empty-card"><div class="empty-mark">4</div><span>GALLERY READY</span><h2>YOUR LEGACY<br><em>STARTS HERE.</em></h2><p>No demo photos. Publish your first Callaway JROTC image from Manage Photos.</p><a class="primary" href="admin.html">ADD FIRST PHOTO →</a></div></section>
+
+<section class="archive" id="gallery">
+  <div class="archive-head"><div><span>THE ARCHIVE</span><h2>BUILT TO <em>BE REMEMBERED</em></h2><div class="gold-line"></div></div><div class="filters"><button class="filter active" data-filter="all">ALL</button><button class="filter" data-filter="leadership">LEADERSHIP</button><button class="filter" data-filter="service">SERVICE</button><button class="filter" data-filter="drill">DRILL</button><button class="filter" data-filter="adventure">ADVENTURE</button><button class="filter" data-filter="academics">ACADEMICS</button><button class="filter" data-filter="events">EVENTS</button></div></div>
+  <div id="galleryGrid" class="gallery-grid"></div><div id="emptyGallery" class="empty-gallery" hidden>NO PHOTOS PUBLISHED YET</div>
+</section>
+
+<section id="legacy" class="legacy"><div class="legacy-card"><div class="legacy-mark">4</div><h2>OUR MOMENTS.<br><em>OUR LEGACY.</em></h2><p>CALLAWAY HIGH SCHOOL • 4TH BATTALION CHARGERS</p><div class="actions"><a class="primary" href="#gallery">EXPLORE →</a><button id="legacySpotlight" class="secondary">ENTER SPOTLIGHT</button></div></div></section>
+</main>
+<footer><div><strong>CALLAWAY JROTC</strong><span>4th Battalion • Chargers</span></div><a href="admin.html">Manage Gallery</a></footer>
+
+<div id="spotlight" class="spotlight" aria-hidden="true">
+  <div id="spotBg" class="spot-bg"></div><div class="spot-shade"></div>
+  <div class="spot-top"><div class="spot-pill"><i></i>CINEMATIC SPOTLIGHT</div><div class="spot-tools"><span>AUTOPLAY <b id="autoplayState">ON</b></span><button id="toggleAutoplay">Ⅱ PAUSE</button><button id="closeSpotlight" class="close">×</button></div></div>
+  <div class="spot-shell">
+    <div class="spot-stage-row"><button id="spotPrev" class="arrow">‹</button><div class="frame-wrap"><div class="gold-border b1"></div><div class="gold-border b2"></div><div id="spotStage" class="spot-stage"><img id="spotImage" alt=""><div class="spot-progress"><div id="spotProgress"></div></div></div></div><button id="spotNext" class="arrow">›</button></div>
+    <div class="spot-meta"><div><span id="spotCategory"></span><h2 id="spotTitle"></h2><p id="spotCaption"></p></div><div class="counter"><b id="spotCurrent">01</b><span>/</span><small id="spotTotal">01</small></div></div>
+    <div class="film-frame"><div id="filmstrip" class="filmstrip"></div></div>
+  </div>
+</div>
+<script src="app.js"></script>
 </body>
 </html>
