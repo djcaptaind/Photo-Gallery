@@ -64,73 +64,30 @@ function animateProgress(el,ms){
 function updateHero(){
   if(!photos.length)return;
   const p=photos[heroIndex];
-
   $("heroBlur").style.backgroundImage=`url("${p.image}")`;
   $("heroImage").classList.remove("motion");
   $("heroImage").src=p.image;
   $("heroImage").alt=p.title||"Callaway JROTC photo";
-  requestAnimationFrame(()=>requestAnimationFrame(()=>$("heroImage").classList.add("motion")));
-
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$('heroImage').classList.add('motion')));
   $("heroTitle").textContent=p.title||"Callaway JROTC";
   $("heroCategory").textContent=labels[p.category]||p.category||"Featured";
   $("heroCaption").textContent=p.caption||`${labels[p.category]||"Callaway JROTC"} highlight`;
   $("heroCurrent").textContent=String(heroIndex+1).padStart(2,"0");
 }
-
-function startHero(){
-  stopHero();
-  if(!heroPlaying||photos.length<2)return;
-  animateProgress($("heroProgress"),ROTATE_MS);
-  heroTimer=setTimeout(()=>{
-    heroIndex=(heroIndex+1)%photos.length;
-    updateHero();
-    startHero();
-  },ROTATE_MS);
-}
-function stopHero(){
-  clearTimeout(heroTimer);
-  clearInterval($("heroProgress")._progressTimer);
-}
-
-$("heroPrev").onclick=()=>{
-  if(!photos.length)return;
-  heroIndex=(heroIndex-1+photos.length)%photos.length;
-  updateHero();
-  if(heroPlaying)startHero();
-};
-$("heroNext").onclick=()=>{
-  if(!photos.length)return;
-  heroIndex=(heroIndex+1)%photos.length;
-  updateHero();
-  if(heroPlaying)startHero();
-};
-$("heroPlay").onclick=()=>{
-  heroPlaying=!heroPlaying;
-  $("heroPlay").textContent=heroPlaying?"PAUSE":"PLAY";
-  heroPlaying?startHero():stopHero();
-};
-$("spotlightBtn").onclick=()=>{
-  visible=[...photos];
-  openSpotlight(heroIndex);
-};
+function startHero(){stopHero();if(!heroPlaying||photos.length<2)return;animateProgress($("heroProgress"),ROTATE_MS);heroTimer=setTimeout(()=>{heroIndex=(heroIndex+1)%photos.length;updateHero();startHero()},ROTATE_MS)}
+function stopHero(){clearTimeout(heroTimer);clearInterval($("heroProgress")._progressTimer)}
+$("heroPrev").onclick=()=>{if(!photos.length)return;heroIndex=(heroIndex-1+photos.length)%photos.length;updateHero();if(heroPlaying)startHero()};
+$("heroNext").onclick=()=>{if(!photos.length)return;heroIndex=(heroIndex+1)%photos.length;updateHero();if(heroPlaying)startHero()};
+$("heroPlay").onclick=()=>{heroPlaying=!heroPlaying;$("heroPlay").textContent=heroPlaying?"PAUSE":"PLAY";heroPlaying?startHero():stopHero()};
+$("spotlightBtn").onclick=()=>{visible=[...photos];openSpotlight(heroIndex)};
 
 function renderGallery(filter="all"){
   visible=filter==="all"?[...photos]:photos.filter(p=>p.category===filter);
-  const grid=$("galleryGrid");
-  grid.innerHTML="";
-  $("emptyGallery").hidden=photos.length!==0;
-
+  const grid=$("galleryGrid");grid.innerHTML="";$("emptyGallery").hidden=photos.length!==0;
   visible.forEach((p,i)=>{
     const c=document.createElement("article");
     c.className=`photo-card ${p.layout||"normal"}`;
-    c.innerHTML=`
-      <img src="${esc(p.image)}" alt="${esc(p.title||"Photo")}" loading="lazy">
-      <div class="card-num">${String(i+1).padStart(2,"0")}</div>
-      <div class="card-copy">
-        <span>${esc(labels[p.category]||p.category||"Gallery")}</span>
-        <h3>${esc(p.title||"Photo")}</h3>
-        <p>${esc(p.caption||"")}</p>
-      </div>`;
+    c.innerHTML=`<img src="${esc(p.image)}" alt="${esc(p.title||"Photo")}" loading="lazy"><div class="card-num">${String(i+1).padStart(2,"0")}</div><div class="card-copy"><span>${esc(labels[p.category]||p.category||"Gallery")}</span><h3>${esc(p.title||"Photo")}</h3><p>${esc(p.caption||"")}</p></div>`;
     c.onclick=()=>openSpotlight(i);
     grid.appendChild(c);
   });
@@ -151,17 +108,22 @@ function renderFilmstrip(){
     const t=document.createElement("button");
     t.className="film-thumb"+(i===spotIndex?" active":"");
     t.innerHTML=`<img src="${esc(p.image)}" alt="${esc(p.title||"Photo")}">`;
-    t.onclick=()=>{
-      spotIndex=i;
-      updateSpotlight();
-      if(spotPlaying)startSpotlight();
-    };
+    t.onclick=()=>{spotIndex=i;updateSpotlight();if(spotPlaying)startSpotlight()};
     rail.appendChild(t);
   });
   setTimeout(()=>{
     const active=rail.querySelector(".film-thumb.active");
     if(active)active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
   },40);
+}
+
+function setStageShape(img){
+  const wrap=document.querySelector('.spot-photo-wrap');
+  const ratio=img.naturalWidth/img.naturalHeight;
+  wrap.classList.remove('landscape','square','portrait');
+  if(ratio>=1.28)wrap.classList.add('landscape');
+  else if(ratio<=0.82)wrap.classList.add('portrait');
+  else wrap.classList.add('square');
 }
 
 function openSpotlight(i){
@@ -189,6 +151,8 @@ function updateSpotlight(){
   if(!p)return;
 
   $("spotlightBg").style.backgroundImage=`url("${p.image}")`;
+  const wrap=document.querySelector('.spot-photo-wrap');
+  wrap.style.setProperty('--spot-img',`url("${p.image}")`);
 
   const img=$("spotImage");
   img.classList.remove("show");
@@ -196,6 +160,7 @@ function updateSpotlight(){
 
   const preload=new Image();
   preload.onload=()=>{
+    setStageShape(preload);
     img.src=p.image;
     requestAnimationFrame(()=>{
       img.classList.remove("enter");
@@ -222,35 +187,11 @@ function startSpotlight(){
     startSpotlight();
   },ROTATE_MS);
 }
-function stopSpotlight(){
-  clearTimeout(spotTimer);
-  clearInterval($("spotProgress")._progressTimer);
-  $("spotProgress").style.width="0%";
-}
-
-$("spotPrev").onclick=()=>{
-  spotIndex=(spotIndex-1+visible.length)%visible.length;
-  updateSpotlight();
-  if(spotPlaying)startSpotlight();
-};
-$("spotNext").onclick=()=>{
-  spotIndex=(spotIndex+1)%visible.length;
-  updateSpotlight();
-  if(spotPlaying)startSpotlight();
-};
-$("toggleAutoplay").onclick=()=>{
-  spotPlaying=!spotPlaying;
-  $("autoplayState").textContent=spotPlaying?"ON":"OFF";
-  $("toggleAutoplay").textContent=spotPlaying?"PAUSE":"PLAY";
-  spotPlaying?startSpotlight():stopSpotlight();
-};
+function stopSpotlight(){clearTimeout(spotTimer);clearInterval($("spotProgress")._progressTimer);$("spotProgress").style.width="0%"}
+$("spotPrev").onclick=()=>{spotIndex=(spotIndex-1+visible.length)%visible.length;updateSpotlight();if(spotPlaying)startSpotlight()};
+$("spotNext").onclick=()=>{spotIndex=(spotIndex+1)%visible.length;updateSpotlight();if(spotPlaying)startSpotlight()};
+$("toggleAutoplay").onclick=()=>{spotPlaying=!spotPlaying;$("autoplayState").textContent=spotPlaying?"ON":"OFF";$("toggleAutoplay").textContent=spotPlaying?"PAUSE":"PLAY";spotPlaying?startSpotlight():stopSpotlight()};
 $("closeSpotlight").onclick=closeSpotlight;
-
-document.addEventListener("keydown",e=>{
-  if(!$("spotlight").classList.contains("open"))return;
-  if(e.key==="Escape")closeSpotlight();
-  if(e.key==="ArrowRight")$("spotNext").click();
-  if(e.key==="ArrowLeft")$("spotPrev").click();
-});
+document.addEventListener("keydown",e=>{if(!$("spotlight").classList.contains("open"))return;if(e.key==="Escape")closeSpotlight();if(e.key==="ArrowRight")$("spotNext").click();if(e.key==="ArrowLeft")$("spotPrev").click()});
 
 loadPhotos();
