@@ -31,7 +31,58 @@ async function getRemote(token=""){try{const b=await api(`${API_BASE}/contents/g
 function readFile(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onerror=()=>reject(new Error("Could not read this photo."));r.onload=()=>resolve(r.result);r.readAsDataURL(file)})}
 async function optimize(file){const raw=await readFile(file);try{const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=raw});const maxW=1800,maxH=1400,scale=Math.min(1,maxW/img.naturalWidth,maxH/img.naturalHeight),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{alpha:false});ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);return c.toDataURL("image/jpeg",.84)}catch(_){return raw}}
 function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function renderPublished(){const g=$("publishedGrid");g.innerHTML="";$("publishedCount").textContent=published.length;if(!published.length){g.innerHTML='<div class="empty">Gallery is empty. Add your first real Callaway JROTC photo.</div>';return}published.forEach((p,i)=>{const c=document.createElement("article");c.className="card";c.innerHTML=`<img src="${esc(p.image)}" alt=""><div class="card-body"><span>${esc(labels[p.category]||p.category||"Gallery")}</span><span class="theme-chip">${esc(themeLabels[p.eventTheme]||"Auto Theme")}</span><h3>${esc(p.title||"Photo")}</h3><p>${esc(p.caption||"")}</p><div class="card-actions"><button class="danger">REMOVE FROM GALLERY</button></div></div>`;c.querySelector("button").onclick=()=>{if(confirm(`Remove "${p.title||'this photo'}" from the published gallery on next publish?`)){p._remove=true;c.style.opacity=.35;c.querySelector("button").textContent="MARKED FOR REMOVAL"}};g.appendChild(c)})}
+function renderPublished(){
+  const g=$("publishedGrid");
+  g.innerHTML="";
+  $("publishedCount").textContent=published.length;
+  if(!published.length){
+    g.innerHTML='<div class="empty">Gallery is empty. Add your first real Callaway JROTC photo.</div>';
+    return;
+  }
+
+  published.forEach((p,i)=>{
+    const c=document.createElement("article");
+    c.className="card";
+    const currentTheme=p.eventTheme||"auto";
+    const themeOptions=Object.entries(themeLabels).map(([value,label])=>
+      `<option value="${value}" ${value===currentTheme?"selected":""}>${esc(label)}</option>`
+    ).join("");
+
+    c.innerHTML=`
+      <img src="${p.image}" alt="">
+      <div class="card-body">
+        <span>${esc(labels[p.category]||p.category||"Gallery")}</span>
+        <h3>${esc(p.title||"Photo")}</h3>
+        <p>${esc(p.caption||"")}</p>
+        <label class="inline-label">Event Theme</label>
+        <select class="published-theme-select">${themeOptions}</select>
+        <button class="save-theme-btn">SAVE THEME</button>
+        <div class="card-actions"><button class="danger">REMOVE FROM GALLERY</button></div>
+      </div>`;
+
+    const select=c.querySelector(".published-theme-select");
+    const saveBtn=c.querySelector(".save-theme-btn");
+    const removeBtn=c.querySelector(".danger");
+
+    saveBtn.onclick=()=>{
+      p.eventTheme=select.value;
+      saveBtn.textContent="THEME SAVED";
+      saveBtn.classList.add("saved");
+      setTimeout(()=>{saveBtn.textContent="SAVE THEME";saveBtn.classList.remove("saved")},1200);
+      toast("Theme updated — publish to make it live");
+    };
+
+    removeBtn.onclick=()=>{
+      if(confirm(`Remove "${p.title||'this photo'}" from the published gallery on next publish?`)){
+        p._remove=true;
+        c.style.opacity=.35;
+        removeBtn.textContent="MARKED FOR REMOVAL";
+      }
+    };
+
+    g.appendChild(c);
+  });
+}
 function renderQueue(){const g=$("queueGrid");g.innerHTML="";$("queueCount").textContent=queue.length;if(!queue.length){g.innerHTML='<div class="empty">No new photos queued.</div>';return}queue.forEach((p,i)=>{const c=document.createElement("article");c.className="card";c.innerHTML=`<img src="${p.data}" alt=""><div class="card-body"><span>${esc(labels[p.category]||p.category)}</span><span class="theme-chip">${esc(themeLabels[p.eventTheme]||"Auto Theme")}</span><h3>${esc(p.title)}</h3><p>${esc(p.caption||"")}</p><div class="card-actions"><button>REMOVE</button></div></div>`;c.querySelector("button").onclick=()=>{queue.splice(i,1);renderQueue()};g.appendChild(c)})}
 async function reload(){try{const r=await getRemote();published=r.items;renderPublished();status(`LOADED FROM GITHUB\nPublished photos: ${published.length}`,"ok")}catch(e){status("LOAD FAILED\n"+e.message,"error")}}
 $("fileInput").onchange=async e=>{const f=e.target.files&&e.target.files[0];selectedData="";if(!f)return;if(f.size>20*1024*1024){toast("Photo is over 20 MB","error");return}$("fileStatus").textContent=`Preparing ${f.name} • ${formatBytes(f.size)}`;try{selectedData=await optimize(f);$("preview").src=selectedData;$("preview").hidden=false;$("fileStatus").textContent=`${f.name} • READY`;toast("Photo ready") }catch(err){$("fileStatus").textContent="Could not prepare photo";toast(err.message,"error")}};
@@ -44,5 +95,10 @@ function dataParts(data){const m=String(data).match(/^data:image\/([^;]+);base64
 async function existingSha(path,token){const r=await fetch(`${API_BASE}/contents/${path}?ref=${BRANCH}`,{headers:headers(token)});if(r.status===404)return null;let b=null;try{b=await r.json()}catch(_){ }if(!r.ok)throw new Error((b&&b.message)||`GitHub HTTP ${r.status}`);return b.sha}
 async function putBase64(path,base64,token,message,sha=null){const body={message,content:base64,branch:BRANCH};if(sha)body.sha=sha;return api(`${API_BASE}/contents/${path}`,{method:"PUT",headers:{...headers(token),"Content-Type":"application/json"},body:JSON.stringify(body)})}
 function setProgress(done,total,text){$("progressWrap").hidden=false;const pct=total?Math.round(done/total*100):0;$("progressText").textContent=text;$("progressPct").textContent=pct+"%";$("progressBar").style.width=pct+"%"}
-$("publishBtn").onclick=async()=>{const token=$("tokenInput").value.trim();if(!token)return status("Paste your GitHub token first.","error");const btn=$("publishBtn");btn.disabled=true;btn.textContent="PUBLISHING...";try{const remote=await getRemote(token);let next=remote.items.filter(r=>!published.some(p=>p._remove&&p.id&&p.id===r.id));const additions=[];for(const q of queue){const parts=dataParts(q.data);if(!parts)throw new Error("A queued image could not be encoded.");const id=`p-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;const filename=`${slug(q.title)}-${id.slice(-6)}.${parts.ext}`;const path=`images/${filename}`;const raw=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`;additions.push({id,path,raw,base64:parts.base64,title:q.title,caption:q.caption,category:q.category,layout:q.layout,eventTheme:q.eventTheme||"auto"})}const total=additions.length+1;let done=0;for(const a of additions){setProgress(done,total,`Uploading ${a.title}...`);await putBase64(a.path,a.base64,token,`Add gallery photo: ${a.title}`);next.push({id:a.id,image:a.raw,title:a.title,caption:a.caption,category:a.category,layout:a.layout,eventTheme:a.eventTheme||"auto"});done++;setProgress(done,total,`Uploaded ${a.title}`)}setProgress(done,total,"Updating gallery list...");const json=JSON.stringify(next,null,2)+"\n";await putBase64("gallery-data.json",encode64(json),token,"Update Callaway JROTC gallery",remote.sha);done++;setProgress(done,total,"Published successfully");queue=[];published=next;renderQueue();renderPublished();status(`PUBLISHED SUCCESSFULLY\nExisting photos preserved: ${remote.items.length}\nNew photos added: ${additions.length}\nTotal live photos: ${next.length}\n\nOpen the gallery and refresh — no Pages redeploy is required for photo updates.`,"ok");toast("Gallery published") }catch(e){console.error(e);status("PUBLISH FAILED\n"+e.message,"error");setProgress(0,1,"Publish failed");}finally{btn.disabled=false;btn.textContent="PUBLISH TO GITHUB"}};
+$("publishBtn").onclick=async()=>{const token=$("tokenInput").value.trim();if(!token)return status("Paste your GitHub token first.","error");const btn=$("publishBtn");btn.disabled=true;btn.textContent="PUBLISHING...";try{const remote=await getRemote(token);let next=remote.items
+      .filter(r=>!published.some(p=>p._remove&&p.id&&p.id===r.id))
+      .map(r=>{
+        const edited=published.find(p=>p.id&&r.id&&p.id===r.id);
+        return edited ? {...r,eventTheme:edited.eventTheme||"auto"} : r;
+      });const additions=[];for(const q of queue){const parts=dataParts(q.data);if(!parts)throw new Error("A queued image could not be encoded.");const id=`p-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;const filename=`${slug(q.title)}-${id.slice(-6)}.${parts.ext}`;const path=`images/${filename}`;const raw=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`;additions.push({id,path,raw,base64:parts.base64,title:q.title,caption:q.caption,category:q.category,layout:q.layout,eventTheme:q.eventTheme||"auto"})}const total=additions.length+1;let done=0;for(const a of additions){setProgress(done,total,`Uploading ${a.title}...`);await putBase64(a.path,a.base64,token,`Add gallery photo: ${a.title}`);next.push({id:a.id,image:a.raw,title:a.title,caption:a.caption,category:a.category,layout:a.layout,eventTheme:a.eventTheme||"auto"});done++;setProgress(done,total,`Uploaded ${a.title}`)}setProgress(done,total,"Updating gallery list...");const json=JSON.stringify(next,null,2)+"\n";await putBase64("gallery-data.json",encode64(json),token,"Update Callaway JROTC gallery",remote.sha);done++;setProgress(done,total,"Published successfully");queue=[];published=next;renderQueue();renderPublished();status(`PUBLISHED SUCCESSFULLY\nExisting photos preserved: ${remote.items.length}\nNew photos added: ${additions.length}\nTotal live photos: ${next.length}\n\nOpen the gallery and refresh — no Pages redeploy is required for photo updates.`,"ok");toast("Gallery published") }catch(e){console.error(e);status("PUBLISH FAILED\n"+e.message,"error");setProgress(0,1,"Publish failed");}finally{btn.disabled=false;btn.textContent="PUBLISH TO GITHUB"}};
 reload();renderQueue();

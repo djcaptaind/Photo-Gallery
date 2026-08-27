@@ -20,3 +20,13 @@
   font-size:7px!important;
   letter-spacing:.08em!important;
 }
+
+.inline-label{margin-top:11px}
+.published-theme-select{margin-top:4px}
+.save-theme-btn{
+  width:100%;margin-top:7px;min-height:37px;border-radius:8px;
+  border:1px solid rgba(255,107,0,.32);background:rgba(255,107,0,.08);
+  color:#ffb175;font-size:8px;font-weight:900;letter-spacing:.08em;cursor:pointer
+}
+.save-theme-btn:hover{background:rgba(255,107,0,.15)}
+.save-theme-btn.saved{border-color:rgba(112,242,167,.36);background:rgba(112,242,167,.08);color:#9cf9c0}
