@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "p-1787840856191-zkksbm",
+    "image": "https://raw.githubusercontent.com/djcaptaind/Photo-Gallery/main/images/jlab-zkksbm.jpg",
+    "title": "JLAB",
+    "caption": "",
+    "category": "leadership",
+    "layout": "normal",
+    "eventTheme": "academics-college"
+  },
+  {
+    "id": "p-1787840856192-osp1wr",
+    "image": "https://raw.githubusercontent.com/djcaptaind/Photo-Gallery/main/images/jlab-osp1wr.jpg",
+    "title": "JLAB",
+    "caption": "",
+    "category": "leadership",
+    "layout": "normal",
+    "eventTheme": "academics-college"
+  }
+]
